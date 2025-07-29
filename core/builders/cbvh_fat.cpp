@@ -7,7 +7,7 @@
 using cbvh2::BVHNode;
 using LiteMath::float4;
 
-#include "nanort/nanort.h"
+//#include "nanort/nanort.h"
 #include "FatBVH.h"
 #include "NonunifNodeStorage.h"
 
@@ -132,20 +132,20 @@ struct TreeConverter
                 const std::vector<Interval>& a_intervals,
                 std::vector<BVHNodeFat>&     a_out) : m_input(a_input),
                                                       m_intervals(a_intervals),
-                                                      m_out(a_out),
-                                                      m_tree(nullptr) {}
+                                                      m_out(a_out) {}
+                                                      //m_tree(nullptr) {}
 
-  TreeConverter(const nanort::BVHAccel<float>& a_tree,
-                std::vector<BVHNodeFat>&       a_out) : m_input(g_dummy1),
-                                                        m_intervals(g_dummy2),
-                                                        m_out(a_out), 
-                                                        m_tree(&a_tree) {}
+  //TreeConverter(const nanort::BVHAccel<float>& a_tree,
+  //              std::vector<BVHNodeFat>&       a_out) : m_input(g_dummy1),
+  //                                                      m_intervals(g_dummy2),
+  //                                                      m_out(a_out), 
+  //                                                      m_tree(&a_tree) {}
     
   const std::vector<BVHNode>&    m_input;
   const std::vector<Interval>&   m_intervals;
 
   std::vector<BVHNodeFat>&       m_out;
-  const nanort::BVHAccel<float>* m_tree;
+  //const nanort::BVHAccel<float>* m_tree;
 
   uint32_t ProcessBVHNode(uint32_t currNodeId);
   uint32_t ProcessNRTNode(uint32_t currNodeId);
@@ -194,47 +194,47 @@ uint32_t TreeConverter::ProcessBVHNode(uint32_t currNodeId)
   return currNodeIndex;
 }
 
-uint32_t TreeConverter::ProcessNRTNode(uint32_t currNodeId)
-{
-  nanort::BVHNode currNode = m_tree->GetNodes()[currNodeId];
-
-  if(currNode.flag == 1) // should not happen in general, except for single node tree
-  {
-    BVHNodeFat fatNode;
-    fatNode.lmin_xyz_rmax_x = to_float4(float3(currNode.bmin), currNode.bmax[0]);
-    fatNode.lmax_xyz_rmax_y = to_float4(float3(currNode.bmax), currNode.bmax[1]);
-    fatNode.rmin_xyz_rmax_z = to_float4(float3(currNode.bmin), currNode.bmax[2]);
-    fatNode.offs_left       = PackOffsetAndSize(currNode.data[1], currNode.data[0]); 
-    fatNode.offs_right      = PackOffsetAndSize(0, 0); 
-    m_out.push_back(fatNode);
-    return uint32_t(m_out.size()-1);
-  }
-  
-  const uint32_t leftOffset  = currNode.data[0];
-  const uint32_t rightOffset = currNode.data[1];
-
-  const nanort::BVHNode leftNode     = m_tree->GetNodes()[leftOffset];
-  const nanort::BVHNode rightNode    = m_tree->GetNodes()[rightOffset];
-  
-  m_out.push_back(BVHNodeFat());
-  uint32_t currNodeIndex  = uint32_t(m_out.size()-1);
-  BVHNodeFat& fatNode     = m_out[currNodeIndex];
-  fatNode.lmin_xyz_rmax_x = to_float4(float3(leftNode.bmin),  rightNode.bmax[0]);
-  fatNode.lmax_xyz_rmax_y = to_float4(float3(leftNode.bmax),  rightNode.bmax[1]);
-  fatNode.rmin_xyz_rmax_z = to_float4(float3(rightNode.bmin), rightNode.bmax[2]);
-
-  if(leftNode.flag == 1)
-    fatNode.offs_left = PackOffsetAndSize(leftNode.data[1], leftNode.data[0]); 
-  else
-    fatNode.offs_left = ProcessNRTNode(leftOffset);
-
-  if(rightNode.flag == 1)
-    fatNode.offs_right = PackOffsetAndSize(rightNode.data[1], rightNode.data[0]);
-  else
-    fatNode.offs_right = ProcessNRTNode(rightOffset);
-  
-  return currNodeIndex;
-}
+//uint32_t TreeConverter::ProcessNRTNode(uint32_t currNodeId)
+//{
+//  nanort::BVHNode currNode = m_tree->GetNodes()[currNodeId];
+//
+//  if(currNode.flag == 1) // should not happen in general, except for single node tree
+//  {
+//    BVHNodeFat fatNode;
+//    fatNode.lmin_xyz_rmax_x = to_float4(float3(currNode.bmin), currNode.bmax[0]);
+//    fatNode.lmax_xyz_rmax_y = to_float4(float3(currNode.bmax), currNode.bmax[1]);
+//    fatNode.rmin_xyz_rmax_z = to_float4(float3(currNode.bmin), currNode.bmax[2]);
+//    fatNode.offs_left       = PackOffsetAndSize(currNode.data[1], currNode.data[0]); 
+//    fatNode.offs_right      = PackOffsetAndSize(0, 0); 
+//    m_out.push_back(fatNode);
+//    return uint32_t(m_out.size()-1);
+//  }
+//  
+//  const uint32_t leftOffset  = currNode.data[0];
+//  const uint32_t rightOffset = currNode.data[1];
+//
+//  const nanort::BVHNode leftNode     = m_tree->GetNodes()[leftOffset];
+//  const nanort::BVHNode rightNode    = m_tree->GetNodes()[rightOffset];
+//  
+//  m_out.push_back(BVHNodeFat());
+//  uint32_t currNodeIndex  = uint32_t(m_out.size()-1);
+//  BVHNodeFat& fatNode     = m_out[currNodeIndex];
+//  fatNode.lmin_xyz_rmax_x = to_float4(float3(leftNode.bmin),  rightNode.bmax[0]);
+//  fatNode.lmax_xyz_rmax_y = to_float4(float3(leftNode.bmax),  rightNode.bmax[1]);
+//  fatNode.rmin_xyz_rmax_z = to_float4(float3(rightNode.bmin), rightNode.bmax[2]);
+//
+//  if(leftNode.flag == 1)
+//    fatNode.offs_left = PackOffsetAndSize(leftNode.data[1], leftNode.data[0]); 
+//  else
+//    fatNode.offs_left = ProcessNRTNode(leftOffset);
+//
+//  if(rightNode.flag == 1)
+//    fatNode.offs_right = PackOffsetAndSize(rightNode.data[1], rightNode.data[0]);
+//  else
+//    fatNode.offs_right = ProcessNRTNode(rightOffset);
+//  
+//  return currNodeIndex;
+//}
 
 std::vector<BVHNodeFat> CreateFatTreeArray(const std::vector<BVHNode>& a_input, const std::vector<Interval>& a_intervals)
 {
@@ -254,17 +254,17 @@ struct TreeConverter2
 {
   TreeConverter2(const std::vector<BVHNode>&  a_input,
                  std::vector<BVHNodeFat>&     a_out) : m_input(a_input),
-                                                       m_out(a_out),
-                                                       m_tree(nullptr) {}
+                                                       m_out(a_out) {}
+                                                       //m_tree(nullptr) {}
 
-  TreeConverter2(const nanort::BVHAccel<float>& a_tree,
-                 std::vector<BVHNodeFat>&       a_out) : m_input(g_dummy1),
-                                                         m_out(a_out), 
-                                                         m_tree(&a_tree) {}
+  //TreeConverter2(const nanort::BVHAccel<float>& a_tree,
+  //               std::vector<BVHNodeFat>&       a_out) : m_input(g_dummy1),
+  //                                                       m_out(a_out), 
+  //                                                       m_tree(&a_tree) {}
     
   const std::vector<BVHNode>&    m_input;
   std::vector<BVHNodeFat>&       m_out;
-  const nanort::BVHAccel<float>* m_tree;
+  //const nanort::BVHAccel<float>* m_tree;
 
   uint32_t ProcessBVHNode(uint32_t currNodeId);
   uint32_t ProcessNRTNode(uint32_t currNodeId);
@@ -315,23 +315,23 @@ std::vector<BVHNodeFat> CreateFatTreeArray(const std::vector<BVHNode>& a_input)
   return result;
 }
 
-std::vector<BVHNodeFat> CreateFatTreeArray(const nanort::BVHAccel<float>& a_tree, std::vector<uint32_t>& a_indicesReordered)
-{
-  const size_t n_trgs = a_tree.GetIndices().size();
-  a_indicesReordered.resize(n_trgs);
-  for (size_t i = 0; i < n_trgs; i++)
-    a_indicesReordered[i] = a_tree.GetIndices()[i];
-
-  std::vector<BVHNodeFat> result;
-  result.reserve(a_tree.GetNodes().size()); // this is important, array should not be reallocated!
-  result.resize(0);
-
-  TreeConverter tc(a_tree, result);
-  tc.ProcessNRTNode(0);
-  
-  result.shrink_to_fit();         
-  return result;
-}
+//std::vector<BVHNodeFat> CreateFatTreeArray(const nanort::BVHAccel<float>& a_tree, std::vector<uint32_t>& a_indicesReordered)
+//{
+//  const size_t n_trgs = a_tree.GetIndices().size();
+//  a_indicesReordered.resize(n_trgs);
+//  for (size_t i = 0; i < n_trgs; i++)
+//    a_indicesReordered[i] = a_tree.GetIndices()[i];
+//
+//  std::vector<BVHNodeFat> result;
+//  result.reserve(a_tree.GetNodes().size()); // this is important, array should not be reallocated!
+//  result.resize(0);
+//
+//  TreeConverter tc(a_tree, result);
+//  tc.ProcessNRTNode(0);
+//  
+//  result.shrink_to_fit();         
+//  return result;
+//}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -347,41 +347,41 @@ cbvh2::BVHTreeFat cbvh2::BuildBVHFat(const float* a_vpos3f,     size_t a_vertNum
   
   // (1) build
   //
-  if (a_presets.quality == cbvh2::BVH_CONSTRUCT_NANORT)
-  {
-    const size_t vStride = a_vByteStride / 4;
-    const size_t n_trgs  = a_indexNum / 3;
-    g_buildTris += n_trgs;
-
-    std::vector<float> verts;
-    verts.resize(a_vertNum * 3);
-    for (size_t y = 0; y < a_vertNum; y++)
-    {
-      verts[y * 3 + 0] = a_vpos3f[y * vStride + 0];
-      verts[y * 3 + 1] = a_vpos3f[y * vStride + 1];
-      verts[y * 3 + 2] = a_vpos3f[y * vStride + 2];
-    }
-
-    nanort::BVHAccel<float> accel;
-    nanort::BVHBuildOptions<float> build_options;
-    build_options.cache_bbox = false;
-    build_options.min_leaf_primitives = a_presets.primsInLeaf;
-    nanort::TriangleMesh<float>    triangle_mesh(verts.data(), a_indices, sizeof(float) * 3);
-    nanort::TriangleSAHPred<float> triangle_pred(verts.data(), a_indices, sizeof(float) * 3);
-    
-    auto before = std::chrono::high_resolution_clock::now();
-    bool res = accel.Build(n_trgs, triangle_mesh, triangle_pred, build_options);
-    if(!res)
-    {
-      std::cout << "nanort::Build is failed!" << std::endl; 
-      exit(0);
-    }
-    float time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - before).count()/1000.f;
-    g_buildTime += double(time); //
-    
-    bvhFat = CreateFatTreeArray(accel, objIndicesReordered);
-  }
-  else
+  //if (a_presets.quality == cbvh2::BVH_CONSTRUCT_NANORT)
+  //{
+  //  const size_t vStride = a_vByteStride / 4;
+  //  const size_t n_trgs  = a_indexNum / 3;
+  //  g_buildTris += n_trgs;
+//
+  //  std::vector<float> verts;
+  //  verts.resize(a_vertNum * 3);
+  //  for (size_t y = 0; y < a_vertNum; y++)
+  //  {
+  //    verts[y * 3 + 0] = a_vpos3f[y * vStride + 0];
+  //    verts[y * 3 + 1] = a_vpos3f[y * vStride + 1];
+  //    verts[y * 3 + 2] = a_vpos3f[y * vStride + 2];
+  //  }
+//
+  //  nanort::BVHAccel<float> accel;
+  //  nanort::BVHBuildOptions<float> build_options;
+  //  build_options.cache_bbox = false;
+  //  build_options.min_leaf_primitives = a_presets.primsInLeaf;
+  //  nanort::TriangleMesh<float>    triangle_mesh(verts.data(), a_indices, sizeof(float) * 3);
+  //  nanort::TriangleSAHPred<float> triangle_pred(verts.data(), a_indices, sizeof(float) * 3);
+  //  
+  //  auto before = std::chrono::high_resolution_clock::now();
+  //  bool res = accel.Build(n_trgs, triangle_mesh, triangle_pred, build_options);
+  //  if(!res)
+  //  {
+  //    std::cout << "nanort::Build is failed!" << std::endl; 
+  //    exit(0);
+  //  }
+  //  float time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - before).count()/1000.f;
+  //  g_buildTime += double(time); //
+  //  
+  //  bvhFat = CreateFatTreeArray(accel, objIndicesReordered);
+  //}
+  //else
   {
     a_presets.format    = cbvh2::BVH2_LEFT_OFFSET;
     auto bvhData        = cbvh2::BuildBVH(a_vpos3f, a_vertNum, a_vByteStride, a_indices, a_indexNum, a_presets);
