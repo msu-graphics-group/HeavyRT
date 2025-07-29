@@ -737,27 +737,27 @@ void LBVHBuilder::BuildFromTriangles(const float4* a_vertOrBoxes, uint32_t a_ver
   const uint32_t a_boxCount       = uint32_t(a_indexNum/3);
   const uint32_t boxesNumExtended = uint32_t(powerOfTwo(a_boxCount));
 
-  Timer timer;  
-  timer.start();
+  //Timer timer;  
+  //timer.start();
 
   // (1) input ==> runCodesAndIndices
   //
   //kernel1D_RedunctionFromTriangles(a_vertOrBoxes, a_vertNum, a_indices, a_boxCount);
   kernel1D_RedunctionFromVertices(a_vertOrBoxes, a_vertNum);
   kernel1D_EvalMortonCodesFromTriangles(a_vertOrBoxes, uint32_t(a_vertNum), a_indices, a_boxCount, boxesNumExtended, runCodesAndIndices.data());
-  m_timings[0] = timer.getElaspedMs();
+  //m_timings[0] = timer.getElaspedMs();
   
   //return; // DEBUG_BUILDER
 
   // (2) sort runCodesAndIndices by morton code
   //
-  timer.start();
+  //timer.start();
   std::sort(runCodesAndIndices.begin(), runCodesAndIndices.end(), [](uint2 a, uint2 b) { return a.x < b.x; });
-  m_timings[1] = timer.getElaspedMs();
+  //m_timings[1] = timer.getElaspedMs();
 
   // (3) make leafes array
   //  
-  timer.start();
+  //timer.start();
   
   kernel1D_AppendInit(runCodesAndIndices.data(), a_boxCount, // runCodesAndIndices ==> (codesEq, prefixCodeEq)
                       codesEq.data(), prefixCodeEq.data()); 
@@ -770,39 +770,39 @@ void LBVHBuilder::BuildFromTriangles(const float4* a_vertOrBoxes, uint32_t a_ver
   {
     kernel1D_MakeLeavesFromTriangles(a_vertOrBoxes, a_vertNum, a_indices, a_indexNum, a_outNodes, a_outIndices);
   
-    m_timings[2] = timer.getElaspedMs();
-    timer.start();
+    //m_timings[2] = timer.getElaspedMs();
+    //timer.start();
     kernel1D_Karras12(a_outNodes);                                // compressedCodes ==> a_outNodes
-    m_timings[3] = timer.getElaspedMs();
+    //m_timings[3] = timer.getElaspedMs();
 
     //return; // DEBUG_BUILDER
 
-    timer.start();
+    //timer.start();
     kernel1D_RefitInit(a_outNodes, runCodesAndIndices.data());    // a_outNodes ==> runCodesAndIndices (used as temp buffer)
     for(int pass = 0; pass < 32; pass++)
     {
       kernel1D_RefitPass(a_outNodes, runCodesAndIndices.data());  // (a_outNodes,runCodesAndIndices) ==> (a_outNodes,runCodesAndIndices)
     }
-    m_timings[4] = timer.getElaspedMs();
+    //m_timings[4] = timer.getElaspedMs();
   }
   else
   {
     kernel1D_MakeLeavesFromTriangles(a_vertOrBoxes, a_vertNum, a_indices, a_indexNum, m_tempNodes.data(), a_outIndices);
   
-    m_timings[2] = timer.getElaspedMs();
-    timer.start();
+    //m_timings[2] = timer.getElaspedMs();
+    //timer.start();
     kernel1D_Karras12(m_tempNodes.data());                                // compressedCodes ==> a_outNodes
-    m_timings[3] = timer.getElaspedMs();                
+    //m_timings[3] = timer.getElaspedMs();                
   
-    timer.start();
+    //timer.start();
     kernel1D_RefitInit(m_tempNodes.data(), runCodesAndIndices.data());    // m_tempNodes ==> runCodesAndIndices (used as temp buffer)
     for(int pass = 0; pass < 32; pass++)
     {
       kernel1D_RefitPass(m_tempNodes.data(), runCodesAndIndices.data());  // (m_tempNodes,runCodesAndIndices) ==> (m_tempNodes,runCodesAndIndices)
     }
-    m_timings[4] = timer.getElaspedMs();
+    //m_timings[4] = timer.getElaspedMs();
     
-    timer.start();
+    //timer.start();
     kernel1D_PeachConvertInit(m_tempNodes.data(), a_outNodes, 1);
     for(size_t i = 0; i < m_peachIntervals.size()-1; i++)
     {
@@ -821,7 +821,7 @@ void LBVHBuilder::BuildFromTriangles(const float4* a_vertOrBoxes, uint32_t a_ver
       kernel1D_RecursiveConvert(m_tempNodes.data(), m_tempCountPrefix.data(), lastLevel.x, lastLevel.y, 
                                 a_outNodes);
     }
-    m_timings[5] = timer.getElaspedMs();
+    //m_timings[5] = timer.getElaspedMs();
   }
 
 }
@@ -833,24 +833,24 @@ void LBVHBuilder::BuildFromBoxes(const float4* a_boxes,    uint32_t a_boxNum,
   const uint32_t a_boxCount = a_boxNum;
   const uint32_t boxesNumExtended = uint32_t(powerOfTwo(a_boxCount));
 
-  Timer timer;  
-  timer.start();
+  //Timer timer;  
+  //timer.start();
 
   // (1) input ==> runCodesAndIndices
   //
   kernel1D_RedunctionFromBoxes(a_boxes, uint32_t(a_boxCount));
   kernel1D_EvalMortonCodesFromBoxes(a_boxes, uint32_t(a_boxCount), boxesNumExtended, runCodesAndIndices.data());
-  m_timings[0] = timer.getElaspedMs();
+  //m_timings[0] = timer.getElaspedMs();
   
   // (2) sort runCodesAndIndices by morton code
   //
-  timer.start();
+  //timer.start();
   std::sort(runCodesAndIndices.begin(), runCodesAndIndices.end(), [](uint2 a, uint2 b) { return a.x < b.x; });
-  m_timings[1] = timer.getElaspedMs();
+  //m_timings[1] = timer.getElaspedMs();
 
   // (3) make leafes array
   //  
-  timer.start();
+  //timer.start();
   
   kernel1D_AppendInit(runCodesAndIndices.data(), a_boxCount, // runCodesAndIndices ==> (codesEq, prefixCodeEq)
                       codesEq.data(), prefixCodeEq.data()); 
@@ -863,37 +863,37 @@ void LBVHBuilder::BuildFromBoxes(const float4* a_boxes,    uint32_t a_boxNum,
   {
     kernel1D_MakeLeavesFromBoxes(a_boxes, a_boxCount, a_outNodes, a_outIndices);
   
-    m_timings[2] = timer.getElaspedMs();
-    timer.start();
+    //m_timings[2] = timer.getElaspedMs();
+    //timer.start();
     kernel1D_Karras12(a_outNodes);                                // compressedCodes ==> a_outNodes
-    m_timings[3] = timer.getElaspedMs();
+    //m_timings[3] = timer.getElaspedMs();
 
-    timer.start();
+    //timer.start();
     kernel1D_RefitInit(a_outNodes, runCodesAndIndices.data());    // a_outNodes ==> runCodesAndIndices (used as temp buffer)
     for(int pass = 0; pass < 32; pass++)
     {
       kernel1D_RefitPass(a_outNodes, runCodesAndIndices.data());  // (a_outNodes,runCodesAndIndices) ==> (a_outNodes,runCodesAndIndices)
     }
-    m_timings[4] = timer.getElaspedMs();
+    //m_timings[4] = timer.getElaspedMs();
   }
   else
   {
     kernel1D_MakeLeavesFromBoxes(a_boxes, a_boxCount, m_tempNodes.data(), a_outIndices);
   
-    m_timings[2] = timer.getElaspedMs();
-    timer.start();
+    //m_timings[2] = timer.getElaspedMs();
+    //timer.start();
     kernel1D_Karras12(m_tempNodes.data());                                // compressedCodes ==> a_outNodes
-    m_timings[3] = timer.getElaspedMs();                
+    //m_timings[3] = timer.getElaspedMs();                
   
-    timer.start();
+    //timer.start();
     kernel1D_RefitInit(m_tempNodes.data(), runCodesAndIndices.data());    // m_tempNodes ==> runCodesAndIndices (used as temp buffer)
     for(int pass = 0; pass < 32; pass++)
     {
       kernel1D_RefitPass(m_tempNodes.data(), runCodesAndIndices.data());  // (m_tempNodes,runCodesAndIndices) ==> (m_tempNodes,runCodesAndIndices)
     }
-    m_timings[4] = timer.getElaspedMs();
+    //m_timings[4] = timer.getElaspedMs();
     
-    timer.start();
+    //timer.start();
     kernel1D_PeachConvertInit(m_tempNodes.data(), a_outNodes, 1);
     for(size_t i = 0; i < m_peachIntervals.size()-1; i++)
     {
@@ -912,7 +912,7 @@ void LBVHBuilder::BuildFromBoxes(const float4* a_boxes,    uint32_t a_boxNum,
       kernel1D_RecursiveConvert(m_tempNodes.data(), m_tempCountPrefix.data(), lastLevel.x, lastLevel.y, 
                                 a_outNodes);
     }
-    m_timings[5] = timer.getElaspedMs();
+    //m_timings[5] = timer.getElaspedMs();
   }
 }
 

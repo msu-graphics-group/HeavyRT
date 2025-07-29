@@ -160,11 +160,11 @@ struct LBVHBuilder
   float m_timings[8];           
 };
 
-class Timer 
-{
-  std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
-public:
-  Timer() { start(); }
-  void start();
-  float getElaspedMs() const;
-};
+//class Timer 
+//{
+//  std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
+//public:
+//  Timer() { start(); }
+//  void start();
+//  float getElaspedMs() const;
+//};
