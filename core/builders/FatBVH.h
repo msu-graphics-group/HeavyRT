@@ -6,7 +6,7 @@
 #include <string>
 
 #include "LiteMath.h"
-#include "aligned_alloc.h"
+//#include "aligned_alloc.h"
 
 using LiteMath::cross;
 using LiteMath::dot;
