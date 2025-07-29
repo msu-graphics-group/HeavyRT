@@ -33,7 +33,7 @@ struct BruteForceRT : public ISceneObject
   void     UpdateGeom_Triangles3f(uint32_t a_geomId, const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel, size_t vByteStride) override;
 
   void ClearScene() override; 
-  void CommitScene  (BuildQuality a_qualityLevel) override; 
+  void CommitScene  (uint32_t a_qualityLevel) override; 
   
   uint32_t AddInstance(uint32_t a_geomId, const float4x4& a_matrix) override;
   void     UpdateInstance(uint32_t a_instanceId, const float4x4& a_matrix) override;
@@ -136,7 +136,7 @@ void BruteForceRT::ClearScene()
   m_geomIdByInstId.resize(0);
 }
 
-void BruteForceRT::CommitScene(BuildQuality a_qualityLevel)
+void BruteForceRT::CommitScene(uint32_t a_qualityLevel)
 {
   
 } 

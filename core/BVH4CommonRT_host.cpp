@@ -105,7 +105,7 @@ void BVH4CommonRT::ClearScene()
   m_geomIdByInstId.resize(0);
 }
 
-void BVH4CommonRT::CommitScene(BuildQuality a_qualityLevel)
+void BVH4CommonRT::CommitScene(uint32_t a_qualityLevel)
 {
   // Build BVH
   //

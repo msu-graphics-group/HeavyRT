@@ -128,7 +128,7 @@ void BVH2Stackless::ClearScene()
   }
 }
 
-void BVH2Stackless::CommitScene(BuildQuality a_qualityLevel)
+void BVH2Stackless::CommitScene(uint32_t a_qualityLevel)
 {
   m_tlasOffset = uint32_t(m_allNodes.size());
 

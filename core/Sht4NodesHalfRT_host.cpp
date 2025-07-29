@@ -125,7 +125,7 @@ void Sht4NodesHalfRT::ClearScene()
   m_geomIdByInstId.resize(0);
 }
 
-void Sht4NodesHalfRT::CommitScene(BuildQuality a_qualityLevel)
+void Sht4NodesHalfRT::CommitScene(uint32_t a_qualityLevel)
 {
   // Init tables
 

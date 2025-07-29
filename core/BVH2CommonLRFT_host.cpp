@@ -122,7 +122,7 @@ void BVH2_LRFT::ClearScene()
   }
 }
 
-void BVH2_LRFT::CommitScene(BuildQuality a_qualityLevel)
+void BVH2_LRFT::CommitScene(uint32_t a_qualityLevel)
 {
   m_tlasOffset = uint32_t(m_allNodes.size());
 

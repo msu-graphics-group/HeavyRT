@@ -119,10 +119,9 @@ void ShtRT::ClearScene()
   m_geomIdByInstId.resize(0);
 }
 
-void ShtRT::CommitScene(BuildQuality a_qualityLevel)
+void ShtRT::CommitScene(uint32_t a_qualityLevel)
 {
   // Init tables
-
 
   std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 

@@ -148,7 +148,7 @@ static inline std::vector<BVHNode16, aligned<BVHNode16, 64> > ConvertNodes(const
   return nodes16;
 }
 
-void BVH2_LOFT_16::CommitScene(BuildQuality a_qualityLevel)
+void BVH2_LOFT_16::CommitScene(uint32_t a_qualityLevel)
 {
   m_tlasOffset = uint32_t(m_allNodes.size());
 

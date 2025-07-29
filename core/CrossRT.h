@@ -12,6 +12,7 @@ enum BuildQuality
   BUILD_MEDIUM = 1, ///< Standart sweep builder
   BUILD_HIGH   = 2, ///< Enable Advanced techniques like Split BVH or Early Split Clipping
   BUILD_REFIT  = 3, ///< Don't change hirarchy, recompute bouding boxes.
+  MOTION_BLUR  = 0x00000010, //
 };
 
 /**
@@ -112,7 +113,7 @@ struct ISceneObject
   /**
   \brief Finish instancing and build top level acceleration structure
   */
-  virtual void CommitScene(BuildQuality a_qualityLevel = BUILD_MEDIUM) = 0; ///< 
+  virtual void CommitScene(uint32_t a_qualityLevel = BUILD_MEDIUM) = 0; ///< 
   
   /**
   \brief Add instance to scene
@@ -121,6 +122,19 @@ struct ISceneObject
 
   */
   virtual uint32_t AddInstance(uint32_t a_geomId, const LiteMath::float4x4& a_matrix) = 0;
+
+  /**
+  \brief Add moving instance to scene
+  \param a_geomId       - input id of geometry that is supposed to be instanced
+  \param a_matrices     - array of float4x4 matrices, default layout is column-major
+  \param a_matrixNumber - size of matrices array
+
+  */
+  virtual uint32_t AddInstanceMotion(uint32_t a_geomId, const LiteMath::float4x4* a_matrices, uint32_t a_matrixNumber)
+  {
+    return AddInstance(a_geomId, a_matrices[0]); // do not support motion blur currently
+  }
+
   
   /**
   \brief Add instance to scene

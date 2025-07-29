@@ -100,7 +100,7 @@ void Sht4NodesRT::ClearScene()
   m_geomIdByInstId.resize(0);
 }
 
-void Sht4NodesRT::CommitScene(BuildQuality a_qualityLevel)
+void Sht4NodesRT::CommitScene(uint32_t a_qualityLevel)
 {
   // Init tables
 

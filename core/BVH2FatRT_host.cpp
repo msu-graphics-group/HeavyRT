@@ -154,7 +154,7 @@ void DebugPrintBoxes(const std::vector<Box4f>& nodes, const std::string& a_fileN
   } 
 }
 
-void BVH2FatRT::CommitScene(BuildQuality a_qualityLevel)
+void BVH2FatRT::CommitScene(uint32_t a_qualityLevel)
 {
   if(m_firstSceneCommit)
   //if(true)

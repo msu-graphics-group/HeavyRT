@@ -106,7 +106,7 @@ public:
 
   void ClearScene() override;
 
-  void CommitScene(BuildQuality a_qualityLevel) override;
+  void CommitScene(uint32_t a_qualityLevel) override;
 
   uint32_t AddInstance(uint32_t a_geomId,
                        const float4x4 &a_matrix) override;

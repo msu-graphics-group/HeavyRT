@@ -115,7 +115,7 @@ void BVH2CommonRT::ClearScene()
   m_geomIdByInstId.resize(0);
 }
 
-void BVH2CommonRT::CommitScene(BuildQuality a_qualityLevel)
+void BVH2CommonRT::CommitScene(uint32_t a_qualityLevel)
 {
   //cbvh2::BuilderPresets presets = {cbvh2::BVH2_LEFT_RIGHT, cbvh2::BVH_CONSTRUCT_FAST, 1};
   cbvh2::BuilderPresets presets = {cbvh2::BVH2_LEFT_RIGHT, cbvh2::BVH_CONSTRUCT_MEDIUM, 1};

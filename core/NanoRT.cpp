@@ -40,7 +40,7 @@ struct NanoRT : public ISceneObject
   void     UpdateGeom_Triangles3f(uint32_t a_geomId, const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel, size_t vByteStride) override;
 
   void ClearScene() override;
-  void CommitScene(BuildQuality a_qualityLevel) override;
+  void CommitScene(uint32_t a_qualityLevel) override;
 
   uint32_t AddInstance(uint32_t a_geomId, const float4x4& a_matrix) override;
   void     UpdateInstance(uint32_t a_instanceId, const float4x4& a_matrix) override;
@@ -79,7 +79,7 @@ struct NanoRTExt : public NanoRT
 
   const char* Name() const override { return "NanoRTExt"; }
 
-  void CommitScene(BuildQuality a_qualityLevel) override;
+  void CommitScene(uint32_t a_qualityLevel) override;
 
   CRT_Hit  RayQuery_NearestHit(float4 posAndNear, float4 dirAndFar) override;
 
@@ -261,7 +261,7 @@ void NanoRT::ClearScene()
   m_geomIdByInstId.resize(0);
 }
 
-void NanoRT::CommitScene(BuildQuality a_qualityLevel)
+void NanoRT::CommitScene(uint32_t a_qualityLevel)
 {
   // Initialize workspace. 
   int num_threads = 1;
@@ -428,7 +428,7 @@ ISceneObject* MakeNanoRTExt(const char* a_implName)
 
 
 ///  It is here that workspaces are allocated
-void NanoRTExt::CommitScene(BuildQuality a_qualityLevel)
+void NanoRTExt::CommitScene(uint32_t a_qualityLevel)
   {
   NanoRT::CommitScene(a_qualityLevel);
 

@@ -119,7 +119,7 @@ void ShtRT64::ClearScene()
   m_geomIdByInstId.resize(0);
 }
 
-void ShtRT64::CommitScene(BuildQuality a_qualityLevel)
+void ShtRT64::CommitScene(uint32_t a_qualityLevel)
 {
   // Init tables
 

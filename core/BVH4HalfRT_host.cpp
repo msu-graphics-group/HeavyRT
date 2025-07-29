@@ -102,7 +102,7 @@ void BVH4HalfRT::ClearScene()
   m_geomIdByInstId.resize(0);
 }
 
-void BVH4HalfRT::CommitScene(BuildQuality a_qualityLevel)
+void BVH4HalfRT::CommitScene(uint32_t a_qualityLevel)
 {
   // Build BVH
   //

@@ -128,7 +128,7 @@ void BVH2CommonLoftRT::ClearScene()
   }
 }
 
-void BVH2CommonLoftRT::CommitScene(BuildQuality a_qualityLevel)
+void BVH2CommonLoftRT::CommitScene(uint32_t a_qualityLevel)
 {
   m_tlasOffset = uint32_t(m_allNodes.size());
 
