@@ -164,6 +164,30 @@ struct ISceneObject
   */
   virtual bool    RayQuery_AnyHit(LiteMath::float4 posAndNear, LiteMath::float4 dirAndFar) = 0;
   
+   /**
+  \brief Find nearest intersection of ray segment (Near,Far) and scene geometry
+  \param posAndNear   - ray origin (x,y,z) and t_near (w)
+  \param dirAndFar    - ray direction (x,y,z) and t_far (w)
+  \param time         - time in [0, 1] interval between first and last timesteps
+  \return             - closest hit surface info
+  */
+  virtual CRT_Hit RayQuery_NearestHitMotion(LiteMath::float4 posAndNear, LiteMath::float4 dirAndFar, float time) 
+  {
+    return RayQuery_NearestHit(posAndNear, dirAndFar);
+  }
+
+  /**
+  \brief Find any hit for ray segment (Near,Far). If none is found return false, else return true;
+  \param posAndNear   - ray origin (x,y,z) and t_near (w)
+  \param dirAndFar    - ray direction (x,y,z) and t_far (w)
+  \param time         - time in [0, 1] interval between first and last timesteps
+  \return             - true if a hit is found, false otherwaise
+  */
+  virtual bool RayQuery_AnyHitMotion(LiteMath::float4 posAndNear, LiteMath::float4 dirAndFar, float time = 0.0f)
+  {
+    return RayQuery_AnyHit(posAndNear, dirAndFar);
+  }
+
   #ifndef KERNEL_SLICER
   virtual MetricStats GetStats();
   virtual void ResetStats();

@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "LiteMath.h"
-#include "aligned_alloc.h"
+//#include "aligned_alloc.h"
 
 using LiteMath::cross;
 using LiteMath::dot;
@@ -89,7 +89,8 @@ struct BVH2FatRT : public ISceneObject
   std::vector<uint32_t> m_primIndices;
 
   std::vector<BVHNode>    m_nodesTLAS;
-  std::vector<BVHNodeFat, aligned<BVHNodeFat, 64> > m_allNodesFat;
+  //std::vector<BVHNodeFat, aligned<BVHNodeFat, 64> > m_allNodesFat;
+  std::vector<BVHNodeFat> m_allNodesFat;
   std::vector<uint32_t>   m_bvhOffsets;
 
   std::vector<uint2>    m_geomOffsets;

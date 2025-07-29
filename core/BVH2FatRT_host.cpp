@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "BVH2FatRT.h"
-#include "nanort/nanort.h"
+//#include "nanort/nanort.h"
 #include "builders/refitter.h"
 
 using LiteMath::BBox3f;
