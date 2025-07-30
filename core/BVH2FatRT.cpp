@@ -49,113 +49,6 @@ void BVH2FatRT::IntersectAllPrimitivesInLeaf(const float3 ray_pos, const float3 
   }
 }
 
-void BVH2FatRT::BVH2TraverseF32(const float3 ray_pos, const float3 ray_dir, float tNear,
-                                uint32_t instId, uint32_t geomId, uint32_t stack[STACK_SIZE], bool stopOnFirstHit,
-                                CRT_Hit* pHit)
-{
-  const uint32_t bvhOffset = m_bvhOffsets[geomId];
-
-  int top = 0;
-  uint32_t leftNodeOffset = 0;
-
-#ifdef ENABLE_METRICS
-  uint32_t leftNodeOffsetOld = leftNodeOffset;
-#endif
-
-  const float3 rayDirInv = SafeInverse(ray_dir);
-  while (top >= 0 && !(stopOnFirstHit && pHit->primId != uint32_t(-1)))
-  {
-    while (top >= 0 && ((leftNodeOffset & LEAF_BIT) == 0))
-    {
-      #ifdef ENABLE_METRICS
-      m_stats.NC  += 2;
-      m_stats.BLB += 1 * sizeof(BVHNodeFat);
-      if (leftNodeOffsetOld != leftNodeOffset) {
-        for (int i = 0; i < TREELET_ARR_SIZE; i++) {
-          if (std::abs(double(leftNodeOffset) - double(leftNodeOffsetOld)) * double(sizeof(BVHNodeFat)) >= (double)treelet_sizes[i])
-            m_stats.LJC[i]++;
-          const uint32_t oldCacheLineId = uint32_t(leftNodeOffsetOld * sizeof(BVHNodeFat)) / uint32_t(treelet_sizes[i]);
-          const uint32_t newCacheLineId = uint32_t(leftNodeOffset * sizeof(BVHNodeFat)) / uint32_t(treelet_sizes[i]);
-          if (oldCacheLineId != newCacheLineId){
-            m_stats.CMC[i]++;
-            m_stats.WSS[i].insert(newCacheLineId);
-          }
-        }
-        leftNodeOffsetOld = leftNodeOffset;
-      }
-      #endif
-
-      const BVHNodeFat fatNode = m_allNodesFat[bvhOffset + leftNodeOffset];
-
-      const float3 leftBoxMin  = to_float3(fatNode.lmin_xyz_rmax_x);
-      const float3 leftBoxMax  = to_float3(fatNode.lmax_xyz_rmax_y);
-      const float3 rightBoxMin = to_float3(fatNode.rmin_xyz_rmax_z);
-      const float3 rightBoxMax = float3(fatNode.lmin_xyz_rmax_x.w, fatNode.lmax_xyz_rmax_y.w, fatNode.rmin_xyz_rmax_z.w);
-
-      const uint32_t node0_leftOffset = fatNode.offs_left;
-      const uint32_t node1_leftOffset = fatNode.offs_right;
-
-      const float2 tm0 = RayBoxIntersection2(ray_pos, rayDirInv, leftBoxMin, leftBoxMax);
-      const float2 tm1 = RayBoxIntersection2(ray_pos, rayDirInv, rightBoxMin, rightBoxMax);
-
-      const bool hitChild0 = (tm0.x <= tm0.y) && (tm0.y >= tNear) && (tm0.x <= pHit->t);
-      const bool hitChild1 = (tm1.x <= tm1.y) && (tm1.y >= tNear) && (tm1.x <= pHit->t);
-
-      // traversal decision
-      //
-      leftNodeOffset = hitChild0 ? node0_leftOffset : node1_leftOffset;
-
-      if (hitChild0 && hitChild1)
-      {
-        leftNodeOffset = (tm0.x <= tm1.x) ? node0_leftOffset : node1_leftOffset; // GPU style branch
-        stack[top]     = (tm0.x <= tm1.x) ? node1_leftOffset : node0_leftOffset; // GPU style branch
-        top++;
-        #ifdef ENABLE_METRICS
-        m_stats.SOC++;
-        m_stats.SBL += sizeof(uint32_t);
-        #endif
-      }
-
-      if (!hitChild0 && !hitChild1) // both miss, stack.pop()
-      {
-        top--;
-        leftNodeOffset = stack[std::max(top,0)];
-        #ifdef ENABLE_METRICS
-        m_stats.SOC++;
-        m_stats.SBL += sizeof(uint32_t);
-        #endif
-      }
-
-    } // end while (searchingForLeaf)
-
-    // leaf node, intersect triangles
-    //
-    if (top >= 0 && leftNodeOffset != 0xFFFFFFFF)
-    {
-      const uint32_t start = EXTRACT_START(leftNodeOffset);
-      const uint32_t count = EXTRACT_COUNT(leftNodeOffset);
-      IntersectAllPrimitivesInLeaf(ray_pos, ray_dir, tNear, instId, geomId, start, count, pHit);
-      #ifdef ENABLE_METRICS
-      m_stats.LC++;
-      m_stats.LC2++;
-      m_stats.TC += count;
-      m_stats.BLB += count * (3 * sizeof(uint32_t) + 3 * sizeof(float4));
-      #endif
-    }
-
-    // continue BVH traversal
-    //
-    top--;
-    leftNodeOffset = stack[std::max(top,0)];
-
-    #ifdef ENABLE_METRICS
-    m_stats.SOC++;
-    m_stats.SBL += sizeof(uint32_t);
-    #endif
-  } // end while (top >= 0)
-
-}
-
 CRT_Hit BVH2FatRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFar)
 {
   bool stopOnFirstHit = (dirAndFar.w <= 0.0f);
@@ -167,7 +60,7 @@ CRT_Hit BVH2FatRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFar)
   m_stats.raysNumber++;
   #endif
 
-  uint32_t stack[STACK_SIZE];
+  [[threadlocal]] uint32_t stack[STACK_SIZE];
 
   CRT_Hit hit;
   hit.t      = dirAndFar.w;
@@ -208,8 +101,110 @@ CRT_Hit BVH2FatRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFar)
       const float3 ray_pos = matmul4x3(m_instMatricesInv[instId], to_float3(posAndNear));
       const float3 ray_dir = matmul3x3(m_instMatricesInv[instId], to_float3(dirAndFar)); // DON'T NORMALIZE IT !!!! When we transform to local space of node, ray_dir must be unnormalized!!!
   
-      BVH2TraverseF32(ray_pos, ray_dir, posAndNear.w, instId, geomId, stack, stopOnFirstHit, &hit);
-    }
+      //BVH2TraverseF32(ray_pos, ray_dir, posAndNear.w, instId, geomId, stack, stopOnFirstHit, &hit);
+      {
+        const uint32_t bvhOffset = m_bvhOffsets[geomId];
+      
+        int top = 0;
+        uint32_t leftNodeOffset = 0;
+      
+        #ifdef ENABLE_METRICS
+        uint32_t leftNodeOffsetOld = leftNodeOffset; 
+        #endif
+      
+        const float3 rayDirInv = SafeInverse(ray_dir);
+        while (top >= 0 && !(stopOnFirstHit && hit.primId != uint32_t(-1)))
+        {
+          while (top >= 0 && ((leftNodeOffset & LEAF_BIT) == 0))
+          {
+            #ifdef ENABLE_METRICS
+            m_stats.NC  += 2;
+            m_stats.BLB += 1 * sizeof(BVHNodeFat);
+            if (leftNodeOffsetOld != leftNodeOffset) {
+              for (int i = 0; i < TREELET_ARR_SIZE; i++) {
+                if (std::abs(double(leftNodeOffset) - double(leftNodeOffsetOld)) * double(sizeof(BVHNodeFat)) >= (double)treelet_sizes[i])
+                  m_stats.LJC[i]++;
+                const uint32_t oldCacheLineId = uint32_t(leftNodeOffsetOld * sizeof(BVHNodeFat)) / uint32_t(treelet_sizes[i]);
+                const uint32_t newCacheLineId = uint32_t(leftNodeOffset * sizeof(BVHNodeFat)) / uint32_t(treelet_sizes[i]);
+                if (oldCacheLineId != newCacheLineId){
+                  m_stats.CMC[i]++;
+                  m_stats.WSS[i].insert(newCacheLineId);
+                }
+              }
+              leftNodeOffsetOld = leftNodeOffset;
+            }
+            #endif
+      
+            const BVHNodeFat fatNode = m_allNodesFat[bvhOffset + leftNodeOffset];
+      
+            const float3 leftBoxMin  = to_float3(fatNode.lmin_xyz_rmax_x);
+            const float3 leftBoxMax  = to_float3(fatNode.lmax_xyz_rmax_y);
+            const float3 rightBoxMin = to_float3(fatNode.rmin_xyz_rmax_z);
+            const float3 rightBoxMax = float3(fatNode.lmin_xyz_rmax_x.w, fatNode.lmax_xyz_rmax_y.w, fatNode.rmin_xyz_rmax_z.w);
+      
+            const uint32_t node0_leftOffset = fatNode.offs_left;
+            const uint32_t node1_leftOffset = fatNode.offs_right;
+      
+            const float2 tm0 = RayBoxIntersection2(ray_pos, rayDirInv, leftBoxMin, leftBoxMax);
+            const float2 tm1 = RayBoxIntersection2(ray_pos, rayDirInv, rightBoxMin, rightBoxMax);
+      
+            const bool hitChild0 = (tm0.x <= tm0.y) && (tm0.y >= posAndNear.w) && (tm0.x <= hit.t);
+            const bool hitChild1 = (tm1.x <= tm1.y) && (tm1.y >= posAndNear.w) && (tm1.x <= hit.t);
+      
+            // traversal decision
+            //
+            leftNodeOffset = hitChild0 ? node0_leftOffset : node1_leftOffset;
+      
+            if (hitChild0 && hitChild1)
+            {
+              leftNodeOffset = (tm0.x <= tm1.x) ? node0_leftOffset : node1_leftOffset; // GPU style branch
+              stack[top]     = (tm0.x <= tm1.x) ? node1_leftOffset : node0_leftOffset; // GPU style branch
+              top++;
+              #ifdef ENABLE_METRICS
+              m_stats.SOC++;
+              m_stats.SBL += sizeof(uint32_t);
+              #endif
+            }
+      
+            if (!hitChild0 && !hitChild1) // both miss, stack.pop()
+            {
+              top--;
+              leftNodeOffset = stack[std::max(top,0)];
+              #ifdef ENABLE_METRICS
+              m_stats.SOC++;
+              m_stats.SBL += sizeof(uint32_t);
+              #endif
+            }
+      
+          } // end while (searchingForLeaf)
+      
+          // leaf node, intersect triangles
+          //
+          if (top >= 0 && leftNodeOffset != 0xFFFFFFFF)
+          {
+            const uint32_t start = EXTRACT_START(leftNodeOffset);
+            const uint32_t count = EXTRACT_COUNT(leftNodeOffset);
+            IntersectAllPrimitivesInLeaf(ray_pos, ray_dir, posAndNear.w, instId, geomId, start, count, &hit);
+            #ifdef ENABLE_METRICS
+            m_stats.LC++;
+            m_stats.LC2++;
+            m_stats.TC += count;
+            m_stats.BLB += count * (3 * sizeof(uint32_t) + 3 * sizeof(float4));
+            #endif
+          }
+        
+          // continue BVH traversal
+          //
+          top--;
+          leftNodeOffset = stack[std::max(top,0)];
+        
+          #ifdef ENABLE_METRICS
+          m_stats.SOC++;
+          m_stats.SBL += sizeof(uint32_t);
+          #endif
+        } // end while (top >= 0)
+      } // end of BVH2TraverseF32
+    } // end of if(isLeafAndIntersect(travFlags)) 
 
   } while (nodeIdx < 0xFFFFFFFE && !(stopOnFirstHit && hit.primId != uint32_t(-1))); //
 

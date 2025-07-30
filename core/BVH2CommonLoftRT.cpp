@@ -7,9 +7,9 @@
 #include "BVH2CommonLoftRT.h"
 
 void BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(const float3 ray_pos, const float3 ray_dir,
-                                                float tNear, uint32_t instId, uint32_t geomId,
-                                                uint32_t a_start, uint32_t a_count,
-                                                CRT_Hit *pHit)
+                                                    float tNear, uint32_t instId, uint32_t geomId,
+                                                    uint32_t a_start, uint32_t a_count,
+                                                    CRT_Hit *pHit)
 {
   const uint2 a_geomOffsets = m_geomOffsets[geomId];
 
@@ -59,7 +59,7 @@ CRT_Hit BVH2CommonLoftRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFa
   m_stats.raysNumber++;
   #endif
 
-  uint32_t stack[STACK_SIZE];
+  [[threadlocal]] uint32_t stack[STACK_SIZE];
 
   CRT_Hit hit;
   hit.t      = dirAndFar.w;

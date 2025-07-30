@@ -71,10 +71,6 @@ struct BVH2FatRT : public ISceneObject
                                     uint32_t a_start, uint32_t a_count,
                                     CRT_Hit *pHit);
 
-  virtual void BVH2TraverseF32(const float3 ray_pos, const float3 ray_dir, float tNear, 
-                               uint32_t instId, uint32_t geomId, uint32_t stack[STACK_SIZE], bool stopOnFirstHit,
-                               CRT_Hit *pHit);
-
   virtual void AppendTreeData(const std::vector<BVHNodeFat>& a_nodes, const std::vector<uint32_t>& a_indices, 
                               const uint32_t *a_triIndices, size_t a_indNumber);
                      

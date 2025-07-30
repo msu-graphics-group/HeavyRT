@@ -243,7 +243,8 @@ namespace cbvh
     std::cout << "[lbvh]: BoxNum     = " << boxNumber << std::endl;
     std::cout << "[lbvh]: 2*BoxNum-1 = " << 2*boxNumber-1 << std::endl;
     std::cout << "[lbvh]: NodesNum   = " << pBuilder->GetNodesNumber() << std::endl;
-
+    
+    if(false)
     {
       const float ev_codes_ms    = timings[0];
       const float sort_ms        = timings[1];
