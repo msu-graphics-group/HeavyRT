@@ -7,7 +7,7 @@
 #include "BVH2CommonLoftRT.h"
 
 #include "builders/cbvh_core.h"
-#include "aligned_alloc.h"
+//#include "aligned_alloc.h"
 using cbvh::BVHNode;
 using cbvh::Interval;
 

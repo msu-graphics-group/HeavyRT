@@ -21,7 +21,7 @@ using LiteMath::to_float3;
 using LiteMath::uint2;
 using LiteMath::Box4f;
 
-#include "aligned_alloc.h"
+//#include "aligned_alloc.h"
 #include "builders/cbvh.h"
 
 using cbvh2::BVHNode;
@@ -70,7 +70,8 @@ struct BVH2CommonLoftRT : public ISceneObject
   std::vector<uint32_t> m_indices;
   std::vector<uint32_t> m_primIndices;
 
-  std::vector<BVHNode, aligned<BVHNode, 64> >  m_allNodes;
+  //std::vector<BVHNode, aligned<BVHNode, 64> >  m_allNodes;
+  std::vector<BVHNode>                         m_allNodes;
   std::vector<uint32_t>                        m_bvhOffsets;
   uint32_t                                     m_tlasOffset    = 0;
 

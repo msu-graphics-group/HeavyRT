@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "LiteMath.h"
-#include "aligned_alloc.h"
+//#include "aligned_alloc.h"
 
 using LiteMath::cross;
 using LiteMath::dot;
@@ -59,9 +59,9 @@ struct BVH2FatRT : public ISceneObject
   CRT_Hit RayQuery_NearestHit(float4 posAndNear, float4 dirAndFar) override;
   bool    RayQuery_AnyHit(float4 posAndNear, float4 dirAndFar) override;
   
-  uint32_t GetGeomNum() const override { return uint32_t(m_geomBoxes.size()); }
-  uint32_t GetInstNum() const override { return uint32_t(m_instBoxes.size()); }
-  const LiteMath::float4* GetGeomBoxes() const override { return (const LiteMath::float4*)m_geomBoxes.data(); }
+  uint32_t GetGeomNum() const { return uint32_t(m_geomBoxes.size()); }
+  uint32_t GetInstNum() const { return uint32_t(m_instBoxes.size()); }
+  const LiteMath::float4* GetGeomBoxes() const { return (const LiteMath::float4*)m_geomBoxes.data(); }
   
 //protected:
 
@@ -85,8 +85,8 @@ struct BVH2FatRT : public ISceneObject
   std::vector<uint32_t> m_primIndices;
 
   std::vector<BVHNode>    m_nodesTLAS;
-  std::vector<BVHNodeFat, aligned<BVHNodeFat, 64> > m_allNodesFat;
-  //std::vector<BVHNodeFat> m_allNodesFat;
+  //std::vector<BVHNodeFat, aligned<BVHNodeFat, 64> > m_allNodesFat;
+  std::vector<BVHNodeFat> m_allNodesFat;
   std::vector<uint32_t>   m_bvhOffsets;
 
   std::vector<uint2>    m_geomOffsets;
