@@ -7,12 +7,9 @@
 #include <vector>
 #include <malloc.h>
 
-
-
 template <class T, int N>
 class aligned
 {
-
 public:
 
   typedef T value_type;
