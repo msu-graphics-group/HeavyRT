@@ -71,6 +71,7 @@ struct ISceneObject
   \brief get implementation name  
   */
   virtual const char* Name() const = 0;
+  virtual ISceneObject* UnderlyingImpl(uint32_t a_implId) { return this; }
 
   /**
   \brief get the format name the tree build from

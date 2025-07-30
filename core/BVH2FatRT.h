@@ -38,6 +38,7 @@ using cbvh2::BVHNodeFat;
 //
 struct BVH2FatRT : public ISceneObject
 {
+  BVH2FatRT() : m_buildName("cbvh_embree2"), m_layoutName("DepthFirst") { m_pLBVHBuilder = std::make_shared<LBVHBuilder>(); }
   BVH2FatRT(const char* a_buildName, const char* a_layoutName) : m_buildName(a_buildName != nullptr ? a_buildName : ""), 
                                                                  m_layoutName(a_layoutName != nullptr ? a_layoutName : "") { m_pLBVHBuilder = std::make_shared<LBVHBuilder>(); }
   ~BVH2FatRT() override {}
@@ -59,9 +60,9 @@ struct BVH2FatRT : public ISceneObject
   CRT_Hit RayQuery_NearestHit(float4 posAndNear, float4 dirAndFar) override;
   bool    RayQuery_AnyHit(float4 posAndNear, float4 dirAndFar) override;
   
-  uint32_t GetGeomNum() const { return uint32_t(m_geomBoxes.size()); }
-  uint32_t GetInstNum() const { return uint32_t(m_instBoxes.size()); }
-  const LiteMath::float4* GetGeomBoxes() const { return (const LiteMath::float4*)m_geomBoxes.data(); }
+  uint32_t GetGeomNum() const override { return uint32_t(m_geomBoxes.size()); }
+  uint32_t GetInstNum() const override { return uint32_t(m_instBoxes.size()); }
+  const LiteMath::float4* GetGeomBoxes() const override { return (const LiteMath::float4*)m_geomBoxes.data(); }
   
 //protected:
 
