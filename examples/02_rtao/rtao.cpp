@@ -53,7 +53,7 @@ void RTAO::CalcAO(uint32_t* a_outColor, uint32_t tidX, uint32_t tidY)
   
   for(uint32_t tidZ = 0; tidZ < m_aoRaysCount; tidZ++) {
     kernel_InitAORay (tidX, tidY, tidZ, &rayPosAndNear, &rayDirAndFar, &hitPosNorm); // ==> (rayPosAndNear, rayDirAndFar, cosAlpha)
-    kernel_TraceAORay(tidX, tidY,       &rayPosAndNear, &rayDirAndFar, &visibility);        // ==> visibility
+    kernel_TraceAORay(tidX, tidY,       &rayPosAndNear, &rayDirAndFar, &visibility); // ==> visibility
   }
 
   kernel_AO2Color(tidX, tidY, &hitPosNorm, &visibility, a_outColor); // ==> a_outColor

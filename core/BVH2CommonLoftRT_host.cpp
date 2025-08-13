@@ -132,8 +132,8 @@ void BVH2CommonLoftRT::CommitScene(uint32_t a_qualityLevel)
 {
   m_tlasOffset = uint32_t(m_allNodes.size());
 
-  cbvh2::BuilderPresets presets = {cbvh2::BVH2_LEFT_OFFSET, cbvh2::BVH_CONSTRUCT_FAST, 1};
-  //cbvh2::BuilderPresets presets = {cbvh2::BVH2_LEFT_OFFSET, cbvh2::BVH_CONSTRUCT_MEDIUM, 1};
+  //cbvh2::BuilderPresets presets = {cbvh2::BVH2_LEFT_OFFSET, cbvh2::BVH_CONSTRUCT_FAST, 1};
+  cbvh2::BuilderPresets presets = {cbvh2::BVH2_LEFT_OFFSET, cbvh2::BVH_CONSTRUCT_MEDIUM, 1};
   auto nodesTLAS = cbvh2::BuildBVH((const cbvh::BVHNode*)m_instBoxes.data(), m_instBoxes.size(), presets);
 
   m_allNodes.insert(m_allNodes.end(), nodesTLAS.begin(), nodesTLAS.end());
