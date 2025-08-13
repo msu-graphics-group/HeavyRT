@@ -123,7 +123,7 @@ scene.LoadState(a_path) < 0
     }
     else 
     {
-      std::cout << "[LoadCustom]: type = " << geomTypeA.c_str() << std::endl;
+      std::cout << "[LoadCust]: type = " << geomTypeA.c_str() << std::endl;
       m_pAccelStruct->AddCustomGeom_FromFile(geomTypeA.c_str(), meshPath.c_str(), m_pAccelStruct.get());
     }
   }
