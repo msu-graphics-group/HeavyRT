@@ -5,6 +5,7 @@
 #include <unordered_set>
 
 #include "LiteMath.h"
+using LiteMath::float4;
 
 enum BuildQuality
 {
@@ -25,6 +26,16 @@ struct CRT_Hit
   uint32_t instId;
   uint32_t geomId;    ///< use 4 most significant bits for geometry type; thay are zero for triangles 
   float    coords[4]; ///< custom intersection data; for triangles coords[0] and coords[1] stores baricentric coords (u,v)
+};
+
+/// @brief custom objects via aabb flag
+static constexpr unsigned int CRT_GEOM_MASK_AABB_BIT    = 0x80000000; // 1000 0000 ... 
+static constexpr unsigned int CRT_GEOM_MASK_AABB_BIT_RM = 0x7fffffff; // 0111 1111 ... 
+
+struct CRT_AABB
+{
+  float4 boxMin;
+  float4 boxMax;
 };
 
 #define REMAP_PRIM_ID
@@ -100,6 +111,17 @@ struct ISceneObject
   */
   virtual uint32_t AddGeom_Triangles3f(const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel = BUILD_HIGH, size_t vByteStride = sizeof(float)*3) = 0;
   
+  /**
+  \brief Add geometry of type 'AxisAlignedBoundingBox' with some custom geometry tag/type (a_typeId), return geometry id
+  \param a_typeId          - internal geometry typeId (called 'tag' sometimes)
+  \param boxMinMaxF8       - bounding box array
+  \param a_boxNumber       - bounding box count (array size); if a_customPrimCount is not 0, a_boxNumber must be a multiple of a_customPrimCount
+  \param a_customPrimPtrs  - array of pointers of type, corresponding to a_typeId.
+  \param a_customPrimCount - size of array pointer. It is allowd to represent each primitive with several AABB on input. For example, if we want 4 boxes per primitive, for a_customPrimCount equals to 10, a_boxNumber must be 40 
+  \return id of added geometry
+  */
+  virtual uint32_t AddGeom_AABB(uint32_t a_typeId, const CRT_AABB* boxMinMaxF8, size_t a_boxNumber, void** a_customPrimPtrs = nullptr, size_t a_customPrimCount = 0) { return 0; }
+
   /**
   \brief Update geometry for triangle mesh to 'internal geometry library' of scene object and return geometry id
   \param a_geomId - geometry id that should be updated. Please refer to 'AddGeom_Triangles4f' for other parameters
