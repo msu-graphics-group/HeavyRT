@@ -112,8 +112,32 @@ void BVH2CommonLoftRT::UpdateGeom_Triangles3f(uint32_t a_geomId, const float *a_
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// uint32_t BVHRT::AddGeom_AABB(uint32_t a_typeId, const CRT_AABB* boxMinMaxF8, size_t a_boxNumber, void** a_customPrimPtrs, size_t a_customPrimCount)
+// {
+//   // append data to global arrays and fix offsets
+//   auto presets = BuilderPresetsFromString(m_buildName.c_str());
+//   auto layout  = LayoutPresetsFromString(m_layoutName.c_str());
+//   auto bvhData = BuildBVHFatCustom((const BVHNode*)boxMinMaxF8, a_boxNumber, presets, layout);
+//   
+//   m_allNodePairs.insert(m_allNodePairs.end(), bvhData.nodes.begin(), bvhData.nodes.end());
+// 
+//   const size_t oldSize = m_primIdCount.size();
+//   m_primIdCount.resize(oldSize + a_boxNumber);
+//   for (int i=0; i<a_boxNumber; i++)
+//     m_primIdCount[oldSize+i] = i;
+//   startEnd.push_back(uint2(uint32_t(oldSize), uint32_t(m_primIdCount.size())));
+//   
+//   m_geomTags.push_back(a_typeId);
+// 
+//   return uint32_t(startEnd.size() - 1);
+// }
+
 uint32_t BVH2CommonLoftRT::AddGeom_AABB(uint32_t a_typeId, const CRT_AABB* boxMinMaxF8, size_t a_boxNumber, void** a_customPrimPtrs, size_t a_customPrimCount)
 {
+  auto presets = cbvh2::BuilderPresetsFromString(m_builderName.c_str());
+  auto bvhData = cbvh2::BuildBVH( (const cbvh2::BVHNode*)boxMinMaxF8, a_boxNumber, presets);
+  m_allNodes.insert(m_allNodes.end(), bvhData.begin(), bvhData.end());
+
   return 0;
 }
 
