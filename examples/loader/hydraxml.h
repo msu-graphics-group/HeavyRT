@@ -275,6 +275,8 @@ namespace hydra_xml
         return pFound->second; 
     }
     
+    std::string GetLibraryRoot() const { return m_libraryRootDir; }
+
   private:
     void parseInstancedMeshes(pugi::xml_node a_scenelib, pugi::xml_node a_geomlib);
     void LogError(const std::string &msg);  

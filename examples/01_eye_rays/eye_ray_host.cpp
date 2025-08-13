@@ -93,20 +93,57 @@ scene.LoadState(a_path) < 0
   trisPerObject.reserve(1000);
   m_totalTris = 0;
   m_pAccelStruct->ClearGeom();
-  for(auto meshPath : scene.MeshFiles())
+
+  for(auto geomNode : scene.GeomNodes())
   {
-    std::cout << "[LoadScene]: mesh = " << meshPath.c_str() << std::endl;
-#if defined(__ANDROID__)
-    auto currMesh = cmesh::LoadMeshFromVSGF2(assetManager, meshPath.c_str());
-#else
-    auto currMesh = cmesh::LoadMeshFromVSGF2(meshPath.c_str());
-#endif
-    auto geomId   = m_pAccelStruct->AddGeom_Triangles3f((const float*)currMesh.vPos4f.data(), currMesh.vPos4f.size(),
-                                                        currMesh.indices.data(), currMesh.indices.size(), BUILD_HIGH, sizeof(float)*4);
-    (void)geomId; // silence "unused variable" compiler warnings
-    m_totalTris += currMesh.indices.size()/3;
-    trisPerObject.push_back(currMesh.indices.size()/3);
+    auto nodeNameW = std::wstring(geomNode.name());
+    auto geomTypeW = std::wstring(geomNode.attribute(L"type").as_string());
+    auto geomTypeA = hydra_xml::ws2s(geomTypeW); 
+
+    auto attr      = geomNode.attribute(L"loc");
+    auto meshLoc   = hydra_xml::ws2s(std::wstring(attr.as_string()));
+    auto meshPath  = scene.GetLibraryRoot() + "/" + meshLoc;
+
+    if(nodeNameW == L"mesh" && geomTypeW == L"vsgf")
+    {
+      std::cout << "[LoadMesh]: mesh = " << meshPath.c_str() << std::endl;
+
+      #if defined(__ANDROID__)
+      auto currMesh = cmesh::LoadMeshFromVSGF2(assetManager, meshPath.c_str());
+      #else
+      auto currMesh = cmesh::LoadMeshFromVSGF2(meshPath.c_str());
+      #endif
+      auto geomId   = m_pAccelStruct->AddGeom_Triangles3f((const float*)currMesh.vPos4f.data(), currMesh.vPos4f.size(),
+                                                          currMesh.indices.data(), currMesh.indices.size(), BUILD_HIGH, sizeof(float)*4);
+  
+      (void)geomId; // silence "unused variable" compiler warnings
+
+      m_totalTris += currMesh.indices.size()/3;
+      trisPerObject.push_back(currMesh.indices.size()/3);
+    }
+    else 
+    {
+      std::cout << "[LoadCustom]: type = " << geomTypeA.c_str() << std::endl;
+      m_pAccelStruct->AddCustomGeom_FromFile(geomTypeA.c_str(), meshPath.c_str(), m_pAccelStruct.get());
+    }
   }
+
+  //for(auto meshPath : scene.MeshFiles())
+  //{
+  //  std::cout << "[LoadScene]: mesh = " << meshPath.c_str() << std::endl;
+  //
+  //  #if defined(__ANDROID__)
+  //  auto currMesh = cmesh::LoadMeshFromVSGF2(assetManager, meshPath.c_str());
+  //  #else
+  //  auto currMesh = cmesh::LoadMeshFromVSGF2(meshPath.c_str());
+  //  #endif
+  //  auto geomId   = m_pAccelStruct->AddGeom_Triangles3f((const float*)currMesh.vPos4f.data(), currMesh.vPos4f.size(),
+  //                                                      currMesh.indices.data(), currMesh.indices.size(), BUILD_HIGH, sizeof(float)*4);
+  //
+  //  (void)geomId; // silence "unused variable" compiler warnings
+  //  m_totalTris += currMesh.indices.size()/3;
+  //  trisPerObject.push_back(currMesh.indices.size()/3);
+  //}
   
   m_totalTrisVisiable = 0;
   m_pAccelStruct->ClearScene();
