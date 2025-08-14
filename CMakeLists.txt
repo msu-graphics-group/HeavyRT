@@ -8,6 +8,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 project(loader_app CXX)
 add_compile_definitions(HALFFLOAT)
+#add_compile_definitions(USE_HEAVYRT)
 
 add_library(project_warnings INTERFACE)
 include(cmake/CompilerWarnings.cmake)
@@ -152,11 +153,11 @@ if(USE_VULKAN)
 
       ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_sw.cpp
       ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_sw_init.cpp
-      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_sw_ds.cpp 
+      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_sw_ds.cpp) 
       
-      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq.cpp
-      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq_init.cpp
-      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq_ds.cpp )
+      #${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq.cpp
+      #${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq_init.cpp
+      #${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq_ds.cpp )
 endif()
 
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
