@@ -63,14 +63,7 @@ struct BVH2CommonLoftRT : public ISceneObject
   static constexpr unsigned int GEOM_TYPE_TRIANGLE = 0;
   static constexpr unsigned int GEOM_TYPE_SPHERE   = 1; 
 
-  void IntersectAllPrimitivesInLeaf(const float3 ray_pos, const float3 ray_dir,
-                                    float tNear, uint32_t instId, uint32_t geomId,
-                                    uint32_t a_start, uint32_t a_count,
-                                    CRT_Hit *pHit);
-
-  void IntersectUnitSphereAtZero(const float3 rayPos, const float3 rayDir, 
-                                 float tNear, uint32_t instId, uint32_t geomId, 
-                                 CRT_Hit *pHit) const;                                    
+  void IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4 rayDirAndFar, CRT_LeafInfo info, CRT_Hit *pHit);                               
 
   virtual size_t AppendTreeData(const std::vector<BVHNode>& a_nodes, const std::vector<uint32_t>& a_indices, 
                                 const uint32_t *a_triIndices, size_t a_indNumber);

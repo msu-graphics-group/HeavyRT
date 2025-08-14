@@ -6,52 +6,8 @@
 
 #include "BVH2CommonLoftRT.h"
 
-void BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(const float3 ray_pos, const float3 ray_dir,
-                                                    float tNear, uint32_t instId, uint32_t geomId,
-                                                    uint32_t a_start, uint32_t a_count,
-                                                    CRT_Hit *pHit)
+static inline bool Quadratic(float A, float B, float C, float *t0, float *t1) 
 {
-  const uint2 a_geomOffsets = m_geomOffsets[geomId];
-
-  for (uint32_t triId = a_start; triId < a_start + a_count; triId++)
-  {
-    const uint32_t A = m_indices[a_geomOffsets.x + triId*3 + 0];
-    const uint32_t B = m_indices[a_geomOffsets.x + triId*3 + 1];
-    const uint32_t C = m_indices[a_geomOffsets.x + triId*3 + 2];
-
-    const float3 A_pos = to_float3(m_vertPos[a_geomOffsets.y + A]);
-    const float3 B_pos = to_float3(m_vertPos[a_geomOffsets.y + B]);
-    const float3 C_pos = to_float3(m_vertPos[a_geomOffsets.y + C]);
-
-    const float3 edge1 = B_pos - A_pos;
-    const float3 edge2 = C_pos - A_pos;
-    const float3 pvec = cross(ray_dir, edge2);
-    const float3 tvec = ray_pos - A_pos;
-    const float3 qvec = cross(tvec, edge1);
-
-    const float invDet = 1.0f / dot(edge1, pvec);
-    const float v = dot(tvec, pvec) * invDet;
-    const float u = dot(qvec, ray_dir) * invDet;
-    const float t = dot(edge2, qvec) * invDet;
-
-    if (v >= -1e-6f && u >= -1e-6f && (u + v <= 1.0f + 1e-6f) && t > tNear && t < pHit->t) // if (v > -1e-6f && u > -1e-6f && (u + v < 1.0f+1e-6f) && t > tMin && t < hit.t)
-    {
-      pHit->t = t;
-      pHit->primId = triId;
-      pHit->instId = instId;
-      pHit->geomId = geomId;
-      pHit->coords[0] = u;
-      pHit->coords[1] = v;
-    }
-  }
-}      
-
-static inline bool Quadratic(float A, float B, float C, float *t0, float *t1) {
-  // Find quadratic discriminant
-  //double discrim = (double)B * (double)B - 4. * (double)A * (double)C;
-  //if (discrim < 0.) 
-  //  return false;
-  //double rootDiscrim = std::sqrt(discrim);
   float discrim = B * B - 4.0f * A * C;
   if (discrim < 0.f) 
     return false;
@@ -77,43 +33,81 @@ static inline bool Quadratic(float A, float B, float C, float *t0, float *t1) {
 
 static inline float3 myfaceforward(const float3 n, const float3 v) { return (dot(n, v) < 0.f) ? (-1.0f)*n : n; }
 
-void BVH2CommonLoftRT::IntersectUnitSphereAtZero(const float3 rayPos, const float3 rayDir, 
-                                                 float tNear, uint32_t instId, uint32_t geomId, CRT_Hit *pHit) const
+void BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4 rayDirAndFar, CRT_LeafInfo info, CRT_Hit *pHit)
 {
-  constexpr float  radius = 1.0f;
-  //constexpr float3 center = float3(0,0,0);
+  const uint2 a_geomOffsets = m_geomOffsets[info.geomId];
+  const uint32_t geomIdType = m_geomIdByInstId[info.instId];
+  const uint32_t geomId     = (geomIdType & GEOM_ID_MASK);
+  const uint32_t geomType   = (geomIdType & GEOM_TP_MASK) >> GEOM_ID_SHFT;
 
-  // Compute _t0_ and _t1_ for ray--element intersection
-  const float3 o = rayPos; // - center;
-  const float  A = rayDir.x * rayDir.x + rayDir.y * rayDir.y + rayDir.z * rayDir.z;
-  const float  B = 2 * (rayDir.x * o.x + rayDir.y * o.y + rayDir.z * o.z);
-  const float  C = o.x * o.x + o.y * o.y + o.z * o.z - radius * radius;
-  float  t0, t1;
-  if (!Quadratic(A, B, C, &t0, &t1)) 
-    return;
+  if(geomType == GEOM_TYPE_TRIANGLE)
+  {  
+    const uint32_t a_start = info.aabbId; // pass through
+    const uint32_t a_count = info.primId; // pass through
+    for (uint32_t triId = a_start; triId < a_start + a_count; triId++)
+    {
+      const uint32_t A = m_indices[a_geomOffsets.x + triId*3 + 0];
+      const uint32_t B = m_indices[a_geomOffsets.x + triId*3 + 1];
+      const uint32_t C = m_indices[a_geomOffsets.x + triId*3 + 2];
   
-  // Select intersection $t$ based on ray direction and element curvature
-  bool useCloserT = (rayDir.z > 0.0f) != (radius < 0.0f);
-  float tHit = useCloserT ? std::min(t0, t1) : std::max(t0, t1);
-  if (tHit < 0.0f) 
-    return;
+      const float3 A_pos = to_float3(m_vertPos[a_geomOffsets.y + A]);
+      const float3 B_pos = to_float3(m_vertPos[a_geomOffsets.y + B]);
+      const float3 C_pos = to_float3(m_vertPos[a_geomOffsets.y + C]);
   
-  // Compute surface normal of element at ray intersection point
-  float3 norm = normalize(o + rayDir*tHit);
-         norm = myfaceforward(norm, -1.0f*rayDir);
+      const float3 edge1 = B_pos - A_pos;
+      const float3 edge2 = C_pos - A_pos;
+      const float3 pvec = cross(to_float3(rayDirAndFar), edge2);
+      const float3 tvec = to_float3(rayPosAndNear) - A_pos;
+      const float3 qvec = cross(tvec, edge1);
   
-  // put intersection params to output
+      const float invDet = 1.0f / dot(edge1, pvec);
+      const float v = dot(tvec, pvec) * invDet;
+      const float u = dot(qvec, to_float3(rayDirAndFar)) * invDet;
+      const float t = dot(edge2, qvec) * invDet;
+  
+      if (v >= -1e-6f && u >= -1e-6f && (u + v <= 1.0f + 1e-6f) && t > rayPosAndNear.w && t < pHit->t) // if (v > -1e-6f && u > -1e-6f && (u + v < 1.0f+1e-6f) && t > tMin && t < hit.t)
+      {
+        pHit->t = t;
+        pHit->primId = triId;
+        pHit->instId = info.instId;
+        pHit->geomId = info.geomId;
+        pHit->coords[0] = u;
+        pHit->coords[1] = v;
+      }
+    }
+  } // triangles
+  else if(geomType == GEOM_TYPE_SPHERE)
   {
-    pHit->t         = tHit;
-    pHit->primId    = 2;
-    pHit->instId    = instId;
-    pHit->geomId    = geomId;
-    pHit->coords[0] = norm.x;
-    pHit->coords[1] = norm.y;
-    pHit->coords[2] = norm.z;
-  }
-}
+    constexpr float  radius = 1.0f;
+    //constexpr float3 center = float3(0,0,0);
+  
+    // Compute _t0_ and _t1_ for ray--element intersection
+    const float3 o = to_float3(rayPosAndNear); // - center;
+    const float  A = rayDirAndFar.x * rayDirAndFar.x + rayDirAndFar.y * rayDirAndFar.y + rayDirAndFar.z * rayDirAndFar.z;
+    const float  B = 2 * (rayDirAndFar.x * o.x + rayDirAndFar.y * o.y + rayDirAndFar.z * o.z);
+    const float  C = o.x * o.x + o.y * o.y + o.z * o.z - radius * radius;
+    float  t0, t1;
+    if (!Quadratic(A, B, C, &t0, &t1)) 
+      return;
+    
+    const float tHit = std::min(t0, t1);
+    
+    if(tHit > rayPosAndNear.w && tHit < pHit->t)
+    {
+      // Compute surface normal of element at ray intersection point
+      float3 norm = normalize(o + to_float3(rayDirAndFar)*tHit);
+             norm = myfaceforward(norm, -1.0f*to_float3(rayDirAndFar));
 
+      pHit->t         = tHit;
+      pHit->primId    = 2;
+      pHit->instId    = info.instId;
+      pHit->geomId    = info.geomId;
+      pHit->coords[0] = norm.x;
+      pHit->coords[1] = norm.y;
+      pHit->coords[2] = norm.z;
+    }
+  }
+}      
 
 //extern bool g_debugPrint;
 
@@ -225,14 +219,26 @@ CRT_Hit BVH2CommonLoftRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFa
       const uint32_t geomId     = (geomIdType & GEOM_ID_MASK);
       const uint32_t geomType   = (geomIdType & GEOM_TP_MASK) >> GEOM_ID_SHFT;
       
-      if(geomType == GEOM_TYPE_TRIANGLE)
-      {
-        IntersectAllPrimitivesInLeaf(ray_pos, ray_dir, posAndNear.w, instId, geomId, start, count, &hit); 
-      }
-      else if(geomType == GEOM_TYPE_SPHERE)
-      {
-        IntersectUnitSphereAtZero(ray_pos, ray_dir, posAndNear.w, instId, geomId, &hit); 
-      }
+      CRT_LeafInfo leafInfo;
+      leafInfo.aabbId = start; // pass-through, bad code, wrong usage!
+      leafInfo.primId = count; // pass-through, bad code, wrong usage!
+      leafInfo.instId = instId;
+      leafInfo.geomId = geomId;
+      leafInfo.rayxId = 0; 
+      leafInfo.rayyId = 0; 
+      
+      const float4 rayPosAndNear2 = to_float4(ray_pos, posAndNear.w);
+      const float4 rayDirAndFar2  = to_float4(ray_dir, dirAndFar.w);
+      IntersectAllPrimitivesInLeaf(rayPosAndNear2, rayDirAndFar2, leafInfo, &hit); 
+
+      //if(geomType == GEOM_TYPE_TRIANGLE)
+      //{
+      //  IntersectAllPrimitivesInLeaf(ray_pos, ray_dir, posAndNear.w, instId, geomId, start, count, &hit); 
+      //}
+      //else if(geomType == GEOM_TYPE_SPHERE)
+      //{
+      //  IntersectUnitSphereAtZero(ray_pos, ray_dir, posAndNear.w, instId, geomId, &hit); 
+      //}
 
       //if(g_debugPrint)
       //{

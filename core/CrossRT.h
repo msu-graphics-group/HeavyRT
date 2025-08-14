@@ -28,6 +28,16 @@ struct CRT_Hit
   float    coords[4]; ///< custom intersection data; for triangles coords[0] and coords[1] stores baricentric coords (u,v)
 };
 
+struct CRT_LeafInfo 
+{
+  uint aabbId; ///<! id of aabb/box  inside BLAS
+  uint primId; ///<! id of primitive inside BLAS
+  uint instId; ///<! instance id
+  uint geomId; ///<! end-to-end index of custom geometry processerd with AABB
+  uint rayxId; ///<! unique ray id (x coord on image)
+  uint rayyId; ///<! unique ray id (y coord on image)
+};
+
 /// @brief custom objects via aabb flag
 static constexpr unsigned int CRT_GEOM_MASK_AABB_BIT    = 0x80000000; // 1000 0000 ... 
 static constexpr unsigned int CRT_GEOM_MASK_AABB_BIT_RM = 0x7fffffff; // 0111 1111 ... 
