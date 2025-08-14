@@ -50,38 +50,11 @@ set(CORE_SRC
         ${CMAKE_SOURCE_DIR}/core/FactoryRT.cpp
         ${CMAKE_SOURCE_DIR}/core/EmbreeRT.cpp
         ${CMAKE_SOURCE_DIR}/core/BruteForceRT.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2CommonRT.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2CommonRT_host.cpp
         ${CMAKE_SOURCE_DIR}/core/BVH2CommonLoftRT.cpp
         ${CMAKE_SOURCE_DIR}/core/BVH2CommonLoftRT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2CommonLoft16RT.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2CommonLoft16RT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2CommonLRFT.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2CommonLRFT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2CommonRTStacklessLBVH_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2CommonRTStacklessLBVH.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH4CommonRT.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH4CommonRT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH4HalfRT.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH4HalfRT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2Stackless.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2Stackless_host.cpp
         ${CMAKE_SOURCE_DIR}/core/BVH2FatRT.cpp
         ${CMAKE_SOURCE_DIR}/core/BVH2FatRT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2Fat16RT.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2Fat16RT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2FatCompactRT.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2FatCompactRT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/NanoRT.cpp
-        ${CMAKE_SOURCE_DIR}/core/NonunifNodeStorage.cpp
-        ${CMAKE_SOURCE_DIR}/core/ShtRT.cpp
-        ${CMAKE_SOURCE_DIR}/core/ShtRT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/ShtRT64.cpp
-        ${CMAKE_SOURCE_DIR}/core/ShtRT64_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/Sht4NodesRT.cpp
-        ${CMAKE_SOURCE_DIR}/core/Sht4NodesRT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/Sht4NodesHalfRT.cpp
-        ${CMAKE_SOURCE_DIR}/core/Sht4NodesHalfRT_host.cpp
+        ${CMAKE_SOURCE_DIR}/core/NonunifNodeStorage.cpp # actually this is a part of builder
         )
 
 set(EXAMPLES_SRC
