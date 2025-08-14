@@ -4,7 +4,7 @@
 #include <cassert>
 #include <memory>
 
-#include "CrossRT.h"
+#include "HeavyRT.h"
 #include "embree3/rtcore.h"
 
 class EmbreeRT : public ISceneObject
@@ -28,10 +28,16 @@ public:
 
   CRT_Hit  RayQuery_NearestHit(LiteMath::float4 posAndNear, LiteMath::float4 dirAndFar) override;
   bool     RayQuery_AnyHit(LiteMath::float4 posAndNear, LiteMath::float4 dirAndFar) override;
+  
+  // (!) not implemented properly  in this impl, see CrossRT lib
+  //
+  uint32_t AddInstanceMotion(uint32_t a_geomId, const LiteMath::float4x4* a_matrices, uint32_t a_matrixNumber) override { return AddInstance(a_geomId, a_matrices[0]); }
+  CRT_Hit  RayQuery_NearestHitMotion(LiteMath::float4 posAndNear, LiteMath::float4 dirAndFar, float time) override { return RayQuery_NearestHit(posAndNear, dirAndFar); }
+  bool     RayQuery_AnyHitMotion(LiteMath::float4 posAndNear, LiteMath::float4 dirAndFar, float time) override { return RayQuery_AnyHit(posAndNear, dirAndFar);  }
 
-  uint32_t GetGeomNum() const override { return uint32_t(m_blas.size()); }
-  uint32_t GetInstNum() const override { return uint32_t(m_inst.size()); }
-  const LiteMath::float4* GetGeomBoxes() const override { return nullptr; }
+  //uint32_t GetGeomNum() const override { return uint32_t(m_blas.size()); }
+  //uint32_t GetInstNum() const override { return uint32_t(m_inst.size()); }
+  //const LiteMath::float4* GetGeomBoxes() const override { return nullptr; }
 
 protected:
   RTCDevice m_device = nullptr;

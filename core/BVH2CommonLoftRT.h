@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cfloat>
 
-#include "CrossRT.h"
+#include "HeavyRT.h"
 #include "raytrace_common.h"
 
 using LiteMath::cross;
@@ -50,10 +50,16 @@ struct BVH2CommonLoftRT : public ISceneObject
 
   CRT_Hit RayQuery_NearestHit(float4 posAndNear, float4 dirAndFar) override;
   bool    RayQuery_AnyHit(float4 posAndNear, float4 dirAndFar) override;
+  
+  // (!) not implemented properly
+  //
+  uint32_t AddInstanceMotion(uint32_t a_geomId, const LiteMath::float4x4* a_matrices, uint32_t a_matrixNumber) override { return AddInstance(a_geomId, a_matrices[0]); }
+  CRT_Hit  RayQuery_NearestHitMotion(LiteMath::float4 posAndNear, LiteMath::float4 dirAndFar, float time) override { return RayQuery_NearestHit(posAndNear, dirAndFar); }
+  bool     RayQuery_AnyHitMotion(LiteMath::float4 posAndNear, LiteMath::float4 dirAndFar, float time) override { return RayQuery_AnyHit(posAndNear, dirAndFar);  }
 
-  uint32_t GetGeomNum() const override { return uint32_t(m_geomBoxes.size()); }
-  uint32_t GetInstNum() const override { return uint32_t(m_instBoxes.size()); }
-  const LiteMath::float4* GetGeomBoxes() const override { return (const LiteMath::float4*)m_geomBoxes.data(); }
+  //uint32_t GetGeomNum() const override { return uint32_t(m_geomBoxes.size()); }
+  //uint32_t GetInstNum() const override { return uint32_t(m_instBoxes.size()); }
+  //const LiteMath::float4* GetGeomBoxes() const override { return (const LiteMath::float4*)m_geomBoxes.data(); }
 
 //protected:
   static constexpr unsigned int GEOM_TP_MASK = 0xf0000000; // 16   types of possible geometry

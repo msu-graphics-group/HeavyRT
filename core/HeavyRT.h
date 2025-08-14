@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef USE_VULKAN
+#include "CrossRT.h"
+#else
+
 #include <cstdint>
 #include <cstddef>
 #include <unordered_set>
@@ -237,9 +241,9 @@ struct ISceneObject
   uint64_t GetVarLC  () const { return m_stats.LC2; }
   #endif
 
-  virtual uint32_t GetGeomNum() const  { return 0; };
-  virtual uint32_t GetInstNum() const  { return 0; };
-  virtual const LiteMath::float4* GetGeomBoxes() const { return nullptr; };
+  // virtual uint32_t GetGeomNum() const  { return 0; };
+  // virtual uint32_t GetInstNum() const  { return 0; };
+  // virtual const LiteMath::float4* GetGeomBoxes() const { return nullptr; };
 
 protected:
   
@@ -269,5 +273,8 @@ protected:
   #endif
 };
 
-ISceneObject* CreateSceneRT(const char* a_implName, const char* a_buildName, const char* a_layoutName);
 void DeleteSceneRT(ISceneObject* a_impl);
+
+#endif
+
+ISceneObject* CreateSceneRT(const char* a_implName, const char* a_buildName, const char* a_layoutName);

@@ -25,7 +25,7 @@ using LiteMath::uint4;
 using LiteMath::Box4f;
 using LiteMath::BBox3f;
 
-#include "CrossRT.h"
+#include "HeavyRT.h"
 #include "raytrace_common.h"
 
 #include "builders/cbvh.h"

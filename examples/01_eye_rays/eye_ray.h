@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 #include "LiteMath.h"
-#include "CrossRT.h"
+#include "HeavyRT.h"
 #include "IRenderer.h"
 
 #ifdef __ANDROID__
@@ -124,7 +124,7 @@ protected:
   uint64_t m_totalTris         = 0;
   uint64_t m_totalTrisVisiable = 0;
 
-  uint32_t GetGeomNum() const override { return m_pAccelStruct->GetGeomNum(); };
-  uint32_t GetInstNum() const override { return m_pAccelStruct->GetInstNum(); };
-  const LiteMath::float4* GetGeomBoxes() const  override { return m_pAccelStruct->GetGeomBoxes(); };
+  //uint32_t GetGeomNum() const override { return m_pAccelStruct->GetGeomNum(); };
+  //uint32_t GetInstNum() const override { return m_pAccelStruct->GetInstNum(); };
+  //const LiteMath::float4* GetGeomBoxes() const  override { return m_pAccelStruct->GetGeomBoxes(); };
 };

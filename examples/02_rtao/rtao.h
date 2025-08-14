@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "LiteMath.h"
-#include "CrossRT.h"
+#include "HeavyRT.h"
 #include "IRenderer.h"
 
 #define RTAO_USE_CLOSEST_HIT
@@ -65,9 +65,9 @@ public:
     m_worldViewInv = inverse4x4(a_worldView);
   }
 
-  virtual uint32_t GetGeomNum() const  { return m_pAccelStruct->GetGeomNum(); };
-  virtual uint32_t GetInstNum() const  { return m_pAccelStruct->GetInstNum(); };
-  virtual const LiteMath::float4* GetGeomBoxes() const { return m_pAccelStruct->GetGeomBoxes(); };
+  //virtual uint32_t GetGeomNum() const  { return m_pAccelStruct->GetGeomNum(); };
+  //virtual uint32_t GetInstNum() const  { return m_pAccelStruct->GetInstNum(); };
+  //virtual const LiteMath::float4* GetGeomBoxes() const { return m_pAccelStruct->GetGeomBoxes(); };
 
 protected:
 

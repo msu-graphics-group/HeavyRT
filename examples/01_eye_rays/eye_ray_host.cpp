@@ -409,13 +409,15 @@ const char* EyeRayCaster::Name() const
 
 CustomMetrics EyeRayCaster::GetMetrics() const 
 {
-  auto traceMetrics = m_pAccelStruct->GetStats();
   CustomMetrics res = {};
+  #ifndef USE_VULKAN
+  auto traceMetrics = m_pAccelStruct->GetStats();
   for (int i = 0; i < TREELET_ARR_SIZE; i++) {
     res.ljc_data[i] = traceMetrics.avgLJC[i];
     res.cmc_data[i] = traceMetrics.avgCMC[i];
     res.wss_data[i] = float(traceMetrics.avgWSS[i])/1000.0f;
   }
+
   res.common_data[0] = traceMetrics.avgNC;
   res.common_data[1] = traceMetrics.avgLC;
   res.common_data[2] = float(m_avgLCV);
@@ -426,6 +428,7 @@ CustomMetrics EyeRayCaster::GetMetrics() const
   res.common_data[7] = 0.0f; // traceMetrics.avgTS;
   res.size_data[0] = traceMetrics.bvhTotalSize;
   res.size_data[1] = traceMetrics.geomTotalSize;
+  #endif
   res.prims_count[0] = m_totalTrisVisiable;
   res.prims_count[1] = m_totalTris;
   return res;

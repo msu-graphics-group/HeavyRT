@@ -187,9 +187,11 @@ void BVH2CommonLoftRT::CommitScene(uint32_t a_qualityLevel)
 
   // reset stats
   //  
+  #ifndef USE_VULKAN
   m_stats.clear();
   m_stats.bvhTotalSize  = m_allNodes.size()*sizeof(BVHNode);
   m_stats.geomTotalSize = m_vertPos.size()*sizeof(float4) + m_indices.size()*sizeof(uint32_t);
+  #endif
 
   std::cout << "totalTrisMem  = " << totalTrisMem << std::endl;
   std::cout << "totalTrisInst = " << totalTrisInst << std::endl;

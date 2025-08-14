@@ -1,4 +1,4 @@
-#include "CrossRT.h"
+#include "HeavyRT.h"
 #include <string>
 #include <iostream>
 
@@ -22,6 +22,7 @@ ISceneObject* CreateSceneRT(const char* a_implName, const char* a_buildName, con
 
 void DeleteSceneRT(ISceneObject* a_impl) { delete a_impl; }
 
+#ifndef USE_VULKAN
 MetricStats ISceneObject::GetStats() 
 {
   MetricStats stats = {};
@@ -46,3 +47,4 @@ void ISceneObject::ResetStats()
 {
   m_stats.clear();
 }
+#endif

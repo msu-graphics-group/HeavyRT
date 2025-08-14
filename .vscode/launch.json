@@ -133,5 +133,26 @@
                 }
             ]
         },
+
+           {
+            "name"   : "SphereCornell(RTX)",
+            "type"   : "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/render_app",
+            "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/a_cornell_bunny/sphere_in_cornell.xml", //"-width", "512", "-height", "512",
+                        "-accel", "RTX", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y01_bunny.bmp", "-gpu", "1"], 
+            "stopAtEntry": false,
+            "cwd"    : "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
     ]
 }

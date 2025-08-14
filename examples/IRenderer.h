@@ -6,7 +6,7 @@
 #include <android/asset_manager.h>
 #endif
 
-#include "CrossRT.h"
+#include "HeavyRT.h"
 
 struct RenderPreset
 {
@@ -21,9 +21,9 @@ struct RenderPreset
 struct CustomMetrics
 {
   float  common_data[8];
-  float  ljc_data[TREELET_ARR_SIZE];
-  float  cmc_data[TREELET_ARR_SIZE];
-  float  wss_data[TREELET_ARR_SIZE];   
+  //float  ljc_data[TREELET_ARR_SIZE];
+  //float  cmc_data[TREELET_ARR_SIZE];
+  //float  wss_data[TREELET_ARR_SIZE];   
   uint64_t size_data[2];
   uint64_t prims_count[2];
 };
@@ -79,11 +79,10 @@ protected:
 
   IRenderer(const IRenderer& rhs) {}
   IRenderer& operator=(const IRenderer& rhs) { return *this;}
-
   
-  virtual uint32_t GetGeomNum() const  { return 0; };
-  virtual uint32_t GetInstNum() const  { return 0; };
-  virtual const LiteMath::float4* GetGeomBoxes() const { return nullptr; };
+  //virtual uint32_t GetGeomNum() const  { return 0; };
+  //virtual uint32_t GetInstNum() const  { return 0; };
+  //virtual const LiteMath::float4* GetGeomBoxes() const { return nullptr; };
 };
 
 IRenderer* CreateRender(const char* a_name);
