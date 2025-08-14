@@ -49,7 +49,7 @@ void ShtRT::AppendTreeData(const std::vector<BVHNode> &a_nodes, const std::vecto
 
 uint32_t
 ShtRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_vertNumber, const uint32_t *a_triIndices, size_t a_indNumber,
-                           BuildQuality a_qualityLevel, size_t vByteStride)
+                           uint32_t a_qualityLevel, size_t vByteStride)
 {
   const size_t vStride = vByteStride / 4;
   assert(vByteStride % 4 == 0);
@@ -98,7 +98,7 @@ ShtRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_vertNumber, const uin
 }
 
 void ShtRT::UpdateGeom_Triangles3f(uint32_t a_geomId, const float *a_vpos3f, size_t a_vertNumber,
-                                   const uint32_t *a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel,
+                                   const uint32_t *a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel,
                                    size_t vByteStride)
 {
   std::cout << "[BVH2ShtRT::UpdateGeom_Triangles3f]: "
@@ -192,7 +192,7 @@ void ShtRT::UpdateInstance(uint32_t a_instanceId, const float4x4 &a_matrix)
 ISceneObject *MakeShtRT(const char *a_implName, const char *a_buildName)
 { return new ShtRT(a_buildName); }
 
-cbvh::BVHPresets ShtRT::GetShtPresetsFromName(const std::string &a_buildName, BuildQuality a_qualityLevel)
+cbvh::BVHPresets ShtRT::GetShtPresetsFromName(const std::string &a_buildName, uint32_t a_qualityLevel)
 {
   cbvh::BVHPresets presets;
   presets.childrenNum = 2;

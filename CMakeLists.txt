@@ -130,6 +130,7 @@ if(USE_VULKAN)
   include_directories(${Vulkan_INCLUDE_DIR})
   include_directories(${EXTERNAL})
   include_directories(${EXTERNAL}/vkutils)
+  #include_directories(${EXTERNAL}/CrossRT) # for "VulkanRTX.h"
 
   set(VULKAN_EXTERNAL_SRC
       ${EXTERNAL}/vkutils/vk_utils.cpp
@@ -148,10 +149,14 @@ if(USE_VULKAN)
 
   set(VULKAN_SRC
       ${CMAKE_SOURCE_DIR}/examples/RenderFactoryGPU.cpp
-      
+
       ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_sw.cpp
       ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_sw_init.cpp
-      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_sw_ds.cpp )
+      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_sw_ds.cpp 
+      
+      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq.cpp
+      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq_init.cpp
+      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq_ds.cpp )
 endif()
 
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")

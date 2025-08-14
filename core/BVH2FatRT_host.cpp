@@ -60,7 +60,7 @@ void BVH2FatRT::AppendTreeData(const std::vector<BVHNodeFat>& a_nodes, const std
   }
 }
 
-uint32_t BVH2FatRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_vertNumber, const uint32_t *a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel, size_t vByteStride)
+uint32_t BVH2FatRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_vertNumber, const uint32_t *a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel, size_t vByteStride)
 {
   const size_t vStride = vByteStride / 4;
   assert(vByteStride % 4 == 0);
@@ -107,7 +107,7 @@ uint32_t BVH2FatRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_vertNumb
   return currGeomId;
 }
 
-void BVH2FatRT::UpdateGeom_Triangles3f(uint32_t a_geomId, const float *a_vpos3f, size_t a_vertNumber, const uint32_t *a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel, size_t vByteStride)
+void BVH2FatRT::UpdateGeom_Triangles3f(uint32_t a_geomId, const float *a_vpos3f, size_t a_vertNumber, const uint32_t *a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel, size_t vByteStride)
 {
   std::cout << "[BVH2FatRT::UpdateGeom_Triangles3f]: " << "not implemeted!" << std::endl; // not planned for this implementation (possible in general)
 }

@@ -47,7 +47,7 @@ uint32_t
 Sht4NodesHalfRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_vertNumber,
                                      const uint32_t *a_triIndices,
                                      size_t a_indNumber,
-                                     BuildQuality a_qualityLevel, size_t vByteStride)
+                                     uint32_t a_qualityLevel, size_t vByteStride)
 {
   const size_t vStride = vByteStride / 4;
   assert(vByteStride % 4 == 0);
@@ -102,7 +102,7 @@ void Sht4NodesHalfRT::UpdateGeom_Triangles3f(uint32_t
                                              a_vertNumber,
                                              const uint32_t *a_triIndices, size_t
                                              a_indNumber,
-                                             BuildQuality a_qualityLevel,
+                                             uint32_t a_qualityLevel,
                                              size_t
                                              vByteStride)
 {

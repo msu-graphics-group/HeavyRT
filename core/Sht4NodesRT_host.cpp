@@ -44,7 +44,7 @@ void Sht4NodesRT::AppendTreeData(const std::vector<BVHNode> &a_nodes, const std:
 uint32_t
 Sht4NodesRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_vertNumber, const uint32_t *a_triIndices,
                                  size_t a_indNumber,
-                                 BuildQuality a_qualityLevel, size_t vByteStride)
+                                 uint32_t a_qualityLevel, size_t vByteStride)
 {
   const size_t vStride = vByteStride/4;
   assert(vByteStride%4==0);
@@ -79,7 +79,7 @@ Sht4NodesRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_vertNumber, con
 }
 
 void Sht4NodesRT::UpdateGeom_Triangles3f(uint32_t a_geomId, const float *a_vpos3f, size_t a_vertNumber,
-                                         const uint32_t *a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel,
+                                         const uint32_t *a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel,
                                          size_t vByteStride)
 {
   std::cout << "[BVH2CommonRT::UpdateGeom_Triangles3f]: "

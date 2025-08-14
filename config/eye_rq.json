@@ -1,0 +1,26 @@
+{
+  "mainClass"     : "EyeRayCaster",
+  "baseClasses"   : [],
+  "composClasses" : [{"interface" : "ISceneObject", 
+                      "implementation": "BVH2CommonLoftRT",
+                      "intersection": {
+                        "shader" : "IntersectAllPrimitivesInLeaf",
+                        "accel"  : "m_pAccelStruct"
+                      }}],
+  "baseDirectory"  : "..",
+  "source"         : ["examples/01_eye_rays/eye_ray.cpp", "core/BVH2CommonLoftRT.cpp"],
+  "includeProcess" : [".", "examples", "core", "core/builders"],
+  "includeIgnore"  : ["external", "core/common"],
+  "options" : {
+    "-pattern"    : "rtv",
+    "-megakernel" : "1",
+    "-shaderCC"   : "slang",
+    "-shaderFolderPrefix" : "examples/01_eye_rays/",
+    "-timestamps"   : "0",
+    "-suffix" : "_GPU_RQ"
+  },
+  "defines" : {
+    "ENABLE_SPHERES" : ""
+  },
+  "end" : ""
+}

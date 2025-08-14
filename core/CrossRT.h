@@ -120,7 +120,7 @@ struct ISceneObject
   \param vByteStride    - byte offset from each vertex to the next one; if 0 or sizeof(float)*3 then data is tiny packed
   \return id of added geometry
   */
-  virtual uint32_t AddGeom_Triangles3f(const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel = BUILD_HIGH, size_t vByteStride = sizeof(float)*3) = 0;
+  virtual uint32_t AddGeom_Triangles3f(const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel = BUILD_HIGH, size_t vByteStride = sizeof(float)*3) = 0;
   
   /**
   \brief Add geometry of type 'AxisAlignedBoundingBox' with some custom geometry tag/type (a_typeId), return geometry id
@@ -142,7 +142,7 @@ struct ISceneObject
    * increase geometry size (no 'a_vertNumber', neither 'a_indNumber') with this fuction (but it is allowed to make it smaller than original geometry size which was set by 'AddGeom_Triangles3f')
      So if you added 'Triangles' and got geom_id == 3, than you will have triangle mesh on geom_id == 3 forever and with the size you have set by 'AddGeom_Triangles3f'.
   */
-  virtual void UpdateGeom_Triangles3f(uint32_t a_geomId, const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel = BUILD_HIGH, size_t vByteStride = sizeof(float)*3) = 0;
+  virtual void UpdateGeom_Triangles3f(uint32_t a_geomId, const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel = BUILD_HIGH, size_t vByteStride = sizeof(float)*3) = 0;
   
   /**
   \brief Clear all instances, but don't touch geometry

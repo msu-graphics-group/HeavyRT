@@ -33,7 +33,7 @@ static inline bool Quadratic(float A, float B, float C, float *t0, float *t1)
 
 static inline float3 myfaceforward(const float3 n, const float3 v) { return (dot(n, v) < 0.f) ? (-1.0f)*n : n; }
 
-void BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4 rayDirAndFar, CRT_LeafInfo info, CRT_Hit *pHit)
+uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4 rayDirAndFar, CRT_LeafInfo info, CRT_Hit *pHit)
 {
   const uint32_t geomIdType = m_geomIdByInstId[info.instId];
   const uint32_t geomId     = (geomIdType & GEOM_ID_MASK);
@@ -76,7 +76,7 @@ void BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4
         pHit->coords[1] = v;
       }
     }
-    
+
   } // triangles
   else if(geomType == GEOM_TYPE_SPHERE)
   {
@@ -90,7 +90,7 @@ void BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4
     const float  C = o.x * o.x + o.y * o.y + o.z * o.z - radius * radius;
     float  t0, t1;
     if (!Quadratic(A, B, C, &t0, &t1)) 
-      return;
+      return 0;
     
     const float tHit = std::min(t0, t1);
     
@@ -109,6 +109,8 @@ void BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4
       pHit->coords[2] = norm.z;
     }
   }
+
+  return 0;
 }      
 
 //extern bool g_debugPrint;

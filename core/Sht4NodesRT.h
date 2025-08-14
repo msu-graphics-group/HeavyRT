@@ -39,7 +39,7 @@ public:
                       size_t a_vertNumber,
                       const uint32_t *a_triIndices,
                       size_t a_indNumber,
-                      BuildQuality a_qualityLevel,
+                      uint32_t a_qualityLevel,
                       size_t vByteStride) override;
 
   void
@@ -48,7 +48,7 @@ public:
                          size_t a_vertNumber,
                          const uint32_t *a_triIndices,
                          size_t a_indNumber,
-                         BuildQuality a_qualityLevel,
+                         uint32_t a_qualityLevel,
                          size_t vByteStride) override;
 
   void ClearScene() override;

@@ -17,8 +17,8 @@ public:
 
   void ClearGeom() override;
   
-  uint32_t AddGeom_Triangles3f(const float * a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel, size_t vByteStride) override;
-  void     UpdateGeom_Triangles3f(uint32_t a_geomId, const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel, size_t vByteStride) override;
+  uint32_t AddGeom_Triangles3f(const float * a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel, size_t vByteStride) override;
+  void     UpdateGeom_Triangles3f(uint32_t a_geomId, const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel, size_t vByteStride) override;
 
   void ClearScene() override; 
   void CommitScene  (uint32_t a_qualityLevel) override; 
@@ -127,7 +127,7 @@ void EmbreeRT::ClearGeom()
 }
   
 
-uint32_t EmbreeRT::AddGeom_Triangles3f(const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel, size_t vByteStride)
+uint32_t EmbreeRT::AddGeom_Triangles3f(const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel, size_t vByteStride)
 {
   if(vByteStride == 0)
     vByteStride = sizeof(float)*3;
@@ -180,7 +180,7 @@ uint32_t EmbreeRT::AddGeom_Triangles3f(const float* a_vpos3f, size_t a_vertNumbe
   return uint32_t(m_blas.size()-1);
 }
 
-void EmbreeRT::UpdateGeom_Triangles3f(uint32_t a_geomId, const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel, size_t vByteStride)
+void EmbreeRT::UpdateGeom_Triangles3f(uint32_t a_geomId, const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel, size_t vByteStride)
 {
   //std::cout << "[EmbreeRT]::UpdateGeom_Triangles3f is not implemented yet!" << std::endl;  
   //return;

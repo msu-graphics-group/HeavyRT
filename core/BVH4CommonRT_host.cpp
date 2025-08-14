@@ -50,7 +50,7 @@ void BVH4CommonRT::AppendTreeData(const std::vector<BVHNode>& a_nodes, const std
   }
 }
 
-uint32_t BVH4CommonRT::AddGeom_Triangles3f(const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel, size_t vByteStride)
+uint32_t BVH4CommonRT::AddGeom_Triangles3f(const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel, size_t vByteStride)
 {
   const size_t vStride = vByteStride/4;
   assert(vByteStride%4==0);
@@ -86,7 +86,7 @@ uint32_t BVH4CommonRT::AddGeom_Triangles3f(const float* a_vpos3f, size_t a_vertN
   return currGeomId;
 }
 
-void BVH4CommonRT::UpdateGeom_Triangles3f(uint32_t a_geomId, const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, BuildQuality a_qualityLevel, size_t vByteStride)
+void BVH4CommonRT::UpdateGeom_Triangles3f(uint32_t a_geomId, const float* a_vpos3f, size_t a_vertNumber, const uint32_t* a_triIndices, size_t a_indNumber, uint32_t a_qualityLevel, size_t vByteStride)
 {
   std::cout << "[BVH4CommonRT::UpdateGeom_Triangles3f]: " << "not implemeted!" << std::endl;
 }
