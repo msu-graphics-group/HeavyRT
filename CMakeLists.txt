@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
+option(USE_VULKAN "Enable Vulkan" OFF)
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
@@ -29,7 +31,6 @@ include_directories(${CMAKE_SOURCE_DIR}/core/common)
 include_directories(${CMAKE_SOURCE_DIR}/core/builders)
 include_directories(${CMAKE_SOURCE_DIR}/examples)
 include_directories(${CMAKE_SOURCE_DIR}/examples/loader)
-
 
 find_package(OpenMP)
 
@@ -107,6 +108,51 @@ set(BUILDERS_SRC
         ${CMAKE_SOURCE_DIR}/core/builders/FatBVHPrint.cpp
         ${CMAKE_SOURCE_DIR}/core/builders/refitter.cpp)
 
+set(VULKAN_SRC "")
+set(VULKAN_EXTERNAL_SRC "")
+
+if(USE_VULKAN)
+  set(EXTERNAL "${CMAKE_SOURCE_DIR}/.." CACHE PATH "external source directory")
+
+  if(CMAKE_SYSTEM_NAME STREQUAL Windows)
+    set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
+  elseif(CMAKE_SYSTEM_NAME STREQUAL Linux)
+    set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_XLIB_KHR)
+  elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
+    set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_MACOS_MVK)
+  endif()
+
+  add_subdirectory(${EXTERNAL}/volk ${EXTERNAL}/volk/build)
+
+  add_compile_definitions(USE_VOLK)
+  add_compile_definitions(USE_VULKAN)
+  
+  include_directories(${Vulkan_INCLUDE_DIR})
+  include_directories(${EXTERNAL})
+  include_directories(${EXTERNAL}/vkutils)
+
+  set(VULKAN_EXTERNAL_SRC
+      ${EXTERNAL}/vkutils/vk_utils.cpp
+      ${EXTERNAL}/vkutils/vk_copy.cpp
+      ${EXTERNAL}/vkutils/vk_buffers.cpp
+      ${EXTERNAL}/vkutils/vk_images.cpp
+      ${EXTERNAL}/vkutils/vk_context.cpp
+      ${EXTERNAL}/vkutils/vk_alloc_simple.cpp
+      ${EXTERNAL}/vkutils/vk_pipeline.cpp
+      ${EXTERNAL}/vkutils/vk_descriptor_sets.cpp
+      ${EXTERNAL}/vkutils/ray_tracing/vk_rt_utils.cpp
+      ${EXTERNAL}/vkutils/geom/vk_mesh.cpp
+      ${EXTERNAL}/CrossRT/VulkanRTX.cpp
+      ${EXTERNAL}/LiteScene/scene_mgr.cpp
+      ${EXTERNAL}/vkutils/geom/cmesh.cpp)
+
+  set(VULKAN_SRC
+      ${CMAKE_SOURCE_DIR}/examples/RenderFactoryGPU.cpp
+      
+      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_sw.cpp
+      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_sw_init.cpp
+      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_sw_ds.cpp )
+endif()
 
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -123,10 +169,10 @@ add_executable(render_app)
 target_sources(render_app PRIVATE main.cpp
            ${SCENE_LOADER_SRC}
            ${CORE_SRC}
-           ${EXAMPLES_SRC} ${BUILDERS_SRC})
+           ${EXAMPLES_SRC} ${BUILDERS_SRC}
+           ${VULKAN_EXTERNAL_SRC} ${VULKAN_SRC})
 
 set_property(TARGET render_app PROPERTY CXX_STANDARD 17)
-
 
 if(CMAKE_SYSTEM_NAME STREQUAL Windows)
     set_target_properties(render_app PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
@@ -142,3 +188,6 @@ if(OpenMP_CXX_FOUND)
   target_link_libraries(render_app PUBLIC OpenMP::OpenMP_CXX) ##
 endif()
 
+if(USE_VULKAN)
+  target_link_libraries(render_app PUBLIC volk)
+endif()

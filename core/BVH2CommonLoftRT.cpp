@@ -35,15 +35,16 @@ static inline float3 myfaceforward(const float3 n, const float3 v) { return (dot
 
 void BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4 rayDirAndFar, CRT_LeafInfo info, CRT_Hit *pHit)
 {
-  const uint2 a_geomOffsets = m_geomOffsets[info.geomId];
   const uint32_t geomIdType = m_geomIdByInstId[info.instId];
   const uint32_t geomId     = (geomIdType & GEOM_ID_MASK);
   const uint32_t geomType   = (geomIdType & GEOM_TP_MASK) >> GEOM_ID_SHFT;
 
   if(geomType == GEOM_TYPE_TRIANGLE)
   {  
-    const uint32_t a_start = info.aabbId; // pass through
-    const uint32_t a_count = info.primId; // pass through
+    const uint2 a_geomOffsets = m_geomOffsets[info.geomId]; // or geomId
+    const uint32_t a_start    = info.aabbId; // pass through
+    const uint32_t a_count    = info.primId; // pass through
+
     for (uint32_t triId = a_start; triId < a_start + a_count; triId++)
     {
       const uint32_t A = m_indices[a_geomOffsets.x + triId*3 + 0];
@@ -75,6 +76,7 @@ void BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4
         pHit->coords[1] = v;
       }
     }
+    
   } // triangles
   else if(geomType == GEOM_TYPE_SPHERE)
   {
@@ -215,37 +217,18 @@ CRT_Hit BVH2CommonLoftRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFa
     {
       const uint32_t start = EXTRACT_START(leftNodeOffset);
       const uint32_t count = EXTRACT_COUNT(leftNodeOffset);
-      const uint32_t geomIdType = m_geomIdByInstId[instId];
-      const uint32_t geomId     = (geomIdType & GEOM_ID_MASK);
-      const uint32_t geomType   = (geomIdType & GEOM_TP_MASK) >> GEOM_ID_SHFT;
-      
+     
       CRT_LeafInfo leafInfo;
       leafInfo.aabbId = start; // pass-through, bad code, wrong usage!
       leafInfo.primId = count; // pass-through, bad code, wrong usage!
       leafInfo.instId = instId;
-      leafInfo.geomId = geomId;
+      leafInfo.geomId = m_geomIdByInstId[instId] & GEOM_ID_MASK;
       leafInfo.rayxId = 0; 
       leafInfo.rayyId = 0; 
       
       const float4 rayPosAndNear2 = to_float4(ray_pos, posAndNear.w);
       const float4 rayDirAndFar2  = to_float4(ray_dir, dirAndFar.w);
       IntersectAllPrimitivesInLeaf(rayPosAndNear2, rayDirAndFar2, leafInfo, &hit); 
-
-      //if(geomType == GEOM_TYPE_TRIANGLE)
-      //{
-      //  IntersectAllPrimitivesInLeaf(ray_pos, ray_dir, posAndNear.w, instId, geomId, start, count, &hit); 
-      //}
-      //else if(geomType == GEOM_TYPE_SPHERE)
-      //{
-      //  IntersectUnitSphereAtZero(ray_pos, ray_dir, posAndNear.w, instId, geomId, &hit); 
-      //}
-
-      //if(g_debugPrint)
-      //{
-      //  std::cout << "seek for intersection at " << leftNodeOffset << std::endl;
-      //  std::cout << "hit.t      = " << hit.t << std::endl;
-      //  std::cout << "hit.primId = " << hit.primId << std::endl;
-      //}
 
       #ifdef ENABLE_METRICS
       m_stats.LC++;

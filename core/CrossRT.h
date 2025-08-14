@@ -6,6 +6,7 @@
 
 #include "LiteMath.h"
 using LiteMath::float4;
+using LiteMath::uint;
 
 enum BuildQuality
 {

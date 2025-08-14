@@ -18,4 +18,14 @@
                 "$gcc"
             ]
         },
+
+        {
+            "label": "BuildShaders: eye_sw_slang",
+            "type": "shell",
+            "command": "cd examples/01_eye_rays/shaders_gpu_sw && bash build_slang.sh",
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
     ]

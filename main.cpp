@@ -21,7 +21,8 @@ constexpr bool MEASURE_FRAMES = false;
 #include "vk_context.h"
 std::shared_ptr<IRenderer> CreateRenderGPU(const char* renderName, const char* accelStruct, const char* buildFormat, const char* layout, 
                                            vk_utils::VulkanContext a_ctx, size_t a_maxThreadsGenerated);
-namespace cbvh2 { void lbvhSetVulkanContext(vk_utils::VulkanContext a_ctx); }                                           
+
+vk_utils::VulkanDeviceFeatures GetRenderGPUFeatures(const char* renderName, const char* accelStruct);                                                                                 
 #endif
 
 void DeleteSceneRT2(ISceneObject* a_impl) { delete a_impl; }
@@ -139,16 +140,15 @@ int main(int argc, const char** argv)
   #ifdef USE_VULKAN
   if(onGPU)
   {
-    //#ifdef _DEBUG
-    //bool enableValidationLayers = true;
-    //#else
-    //bool enableValidationLayers = false;
-    //#endif
+    #ifdef _DEBUG
+    bool enableValidationLayers = true;
+    #else
     bool enableValidationLayers = false;
+    #endif
     unsigned int a_preferredDeviceId = 0;
-    auto ctx = vk_utils::globalContextGet(enableValidationLayers, a_preferredDeviceId);
-    cbvh2::lbvhSetVulkanContext(ctx);
-    pRender = CreateRenderGPU(renderName, accelStruct, buildFormat, layout, ctx, WIDTH*HEIGHT);
+    auto features = GetRenderGPUFeatures(renderName, accelStruct);  
+    auto ctx      = vk_utils::globalContextInit(features, enableValidationLayers, a_preferredDeviceId);
+    pRender       = CreateRenderGPU(renderName, accelStruct, buildFormat, layout, ctx, WIDTH*HEIGHT);
   }
   else
   #endif
@@ -350,6 +350,11 @@ int main(int argc, const char** argv)
   std::string tstMsg = (psnr <= 40.0f) ? "FAILED" : "PASSED";
   fout << std::setprecision(4) << renderName << ";" << WIDTH << ";" << sceneName << ";" << g_buildTris << ";" << buildFormat << ";" << acStr.c_str() << ";" << layout << ";" << timeMin << ";" << timeAvg << ";" << timeErr << ";" << float(g_buildTime) << ";" << size1InMB << ";" << psnr << ";" << tstMsg.c_str() << ";" << std::endl;
 
+  #endif
+
+  pRender = nullptr;
+  #ifdef USE_VULKAN
+  vk_utils::globalContextDestroy();
   #endif
 
   return 0;

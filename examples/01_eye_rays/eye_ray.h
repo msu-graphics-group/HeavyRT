@@ -17,6 +17,9 @@
 #endif
 
 using LiteMath::uint;
+using LiteMath::uint2;
+using LiteMath::float4;
+using LiteMath::float4x4;
 
 class EyeRayCaster : public IRenderer
 {
