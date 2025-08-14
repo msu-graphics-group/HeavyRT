@@ -52,9 +52,8 @@ set(CORE_SRC
         ${CMAKE_SOURCE_DIR}/core/BruteForceRT.cpp
         ${CMAKE_SOURCE_DIR}/core/BVH2CommonLoftRT.cpp
         ${CMAKE_SOURCE_DIR}/core/BVH2CommonLoftRT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2FatRT.cpp
-        ${CMAKE_SOURCE_DIR}/core/BVH2FatRT_host.cpp
-        ${CMAKE_SOURCE_DIR}/core/NonunifNodeStorage.cpp # actually this is a part of builder
+        #${CMAKE_SOURCE_DIR}/core/BVH2FatRT.cpp
+        #${CMAKE_SOURCE_DIR}/core/BVH2FatRT_host.cpp
         )
 
 set(EXAMPLES_SRC

@@ -9,7 +9,7 @@ using LiteMath::float4;
 
 //#include "nanort/nanort.h"
 #include "FatBVH.h"
-#include "NonunifNodeStorage.h"
+//#include "NonunifNodeStorage.h"
 
 int cbvh2::CalcInputGroupSize(const LayoutPresets& a_layout)
 {
@@ -509,7 +509,7 @@ cbvh2::BVHTreeFatCompressed cbvh2::BuildBVHHalf(const float* a_vpos3f,     size_
 #endif
 
 
-cbvh2::BVHTreeFatCompressed cbvh2::BuildBVHFatCompressed(const float* a_vpos3f,     size_t a_vertNum, size_t a_vByteStride, 
+/*cbvh2::BVHTreeFatCompressed cbvh2::BuildBVHFatCompressed(const float* a_vpos3f,     size_t a_vertNum, size_t a_vByteStride, 
                                                          const uint32_t* a_indices, size_t a_indexNum, BuilderPresets a_presets, LayoutPresets a_layout)
 {
   a_layout.layout = cbvh2::LAYOUT_CALBVH;
@@ -538,4 +538,4 @@ cbvh2::BVHTreeFatCompressed cbvh2::BuildBVHFatCompressed(const float* a_vpos3f, 
     nns.data.push_back(uint4(0,0,0,0));
 
   return BVHTreeFatCompressed(nns.data, fatTree.indices, nns.m_log2_group_size);
-}
+}*/
