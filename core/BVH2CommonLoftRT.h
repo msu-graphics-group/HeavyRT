@@ -64,8 +64,12 @@ struct BVH2CommonLoftRT : public ISceneObject
   virtual size_t AppendTreeData(const std::vector<BVHNode>& a_nodes, const std::vector<uint32_t>& a_indices, 
                                 const uint32_t *a_triIndices, size_t a_indNumber);
 
-  std::vector<Box4f> m_geomBoxes;
-  std::vector<Box4f> m_instBoxes;
+  static constexpr unsigned int GEOM_TP_MASK = 0xf0000000; // 16   types of possible geometry
+  static constexpr unsigned int GEOM_ID_MASK = 0x0fffffff; // 2^28 max geometric objects is allowed which is high enough
+  static constexpr unsigned int GEOM_ID_SHFT = 28;                               
+
+  std::vector<Box4f>    m_geomBoxes; // use boxMin.w as geomSize and boxMin.w as geomTag
+  std::vector<Box4f>    m_instBoxes;
 
   std::vector<float4x4> m_instMatricesInv; ///< inverse instance matrices
   std::vector<float4x4> m_instMatricesFwd; ///< instance matrices
@@ -81,7 +85,6 @@ struct BVH2CommonLoftRT : public ISceneObject
 
   std::vector<uint2>    m_geomOffsets;
   std::vector<uint32_t> m_geomIdByInstId;
-  std::vector<uint32_t> m_geomSize;
 
   std::string m_builderName;
   size_t totalTrisMem     = 0;

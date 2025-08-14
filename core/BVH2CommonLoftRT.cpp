@@ -150,12 +150,20 @@ CRT_Hit BVH2CommonLoftRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFa
 
     if (top >= 0 && leftNodeOffset != 0xFFFFFFFF && bvhOffset != m_tlasOffset)  // leaf node of BLAS, intersect triangles
     {
-      const uint32_t start  = EXTRACT_START(leftNodeOffset);
-      const uint32_t count  = EXTRACT_COUNT(leftNodeOffset);
-      const uint32_t geomId = m_geomIdByInstId[instId];
-
-      IntersectAllPrimitivesInLeaf(ray_pos, ray_dir, posAndNear.w, instId, geomId, start, count, &hit); 
+      const uint32_t start = EXTRACT_START(leftNodeOffset);
+      const uint32_t count = EXTRACT_COUNT(leftNodeOffset);
+      const uint32_t geomIdType = m_geomIdByInstId[instId];
+      const uint32_t geomId     = (geomIdType & GEOM_ID_MASK);
+      const uint32_t geomType   = (geomIdType & GEOM_TP_MASK) >> GEOM_ID_SHFT;
       
+      if(geomType == 0)
+      {
+        IntersectAllPrimitivesInLeaf(ray_pos, ray_dir, posAndNear.w, instId, geomId, start, count, &hit); 
+      }
+      else if(geomType == 1)
+      {
+        int a = 2;
+      }
       //if(g_debugPrint)
       //{
       //  std::cout << "seek for intersection at " << leftNodeOffset << std::endl;
@@ -172,13 +180,13 @@ CRT_Hit BVH2CommonLoftRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFa
     }
     else if (top >= 0 && bvhOffset == m_tlasOffset)                            // leaf node of BLAS, intersect BLAS next
     {
-      instId           = EXTRACT_START(leftNodeOffset);
-      bvhOffset        = m_bvhOffsets[m_geomIdByInstId[instId]];
+      instId    = EXTRACT_START(leftNodeOffset);
+      bvhOffset = m_bvhOffsets[m_geomIdByInstId[instId] & GEOM_ID_MASK];
       
       //if(g_debugPrint)
       //  std::cout << "TLAS -> BLAS for inst(" << instId << ") at " << leftNodeOffset << std::endl;
         
-      leftNodeOffset   = 0;
+      leftNodeOffset = 0;
 
       ray_pos = matmul4x3(m_instMatricesInv[instId], to_float3(posAndNear));
       ray_dir = matmul3x3(m_instMatricesInv[instId], to_float3(dirAndFar));

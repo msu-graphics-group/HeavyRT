@@ -36,10 +36,8 @@ void BVH2CommonLoftRT::ClearGeom()
   m_geomBoxes.reserve(std::max<size_t>(reserveSize, m_geomBoxes.capacity()));
   m_geomBoxes.resize(0);
 
-  m_bvhOffsets.reserve(std::max<size_t>(reserveSize, m_bvhOffsets.capacity()));
+  m_bvhOffsets.reserve(m_geomBoxes.capacity() + 1);
   m_bvhOffsets.resize(0);
-
-  m_geomSize.resize(0);
   
   totalTrisMem = 0;
   totalTrisMem = 0;
@@ -88,8 +86,6 @@ uint32_t BVH2CommonLoftRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_v
     bbox.include(v);
   }
 
-  m_geomBoxes.push_back(bbox);
-
   // Build BVH for each geom and append it to big buffer
   //
   auto presets = cbvh2::BuilderPresetsFromString(m_builderName.c_str());
@@ -99,7 +95,12 @@ uint32_t BVH2CommonLoftRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_v
   m_bvhOffsets.push_back(uint32_t(oldBvhSize));
 
   totalTrisMem += (a_indNumber/3);
-  m_geomSize.push_back(uint32_t(a_indNumber/3));
+  //m_geomSize.push_back(uint32_t(a_indNumber/3));
+
+  bbox.boxMin.w = LiteMath::as_float(uint32_t(a_indNumber/3)); // store 'm_geomSize[geomId]';
+  bbox.boxMax.w = LiteMath::as_float(0);                       // store 'm_geomTags[geomId]'; Triangles are always have zero tag
+  m_geomBoxes.push_back(bbox);
+
   return currGeomId;
 }
 
@@ -112,33 +113,29 @@ void BVH2CommonLoftRT::UpdateGeom_Triangles3f(uint32_t a_geomId, const float *a_
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// uint32_t BVHRT::AddGeom_AABB(uint32_t a_typeId, const CRT_AABB* boxMinMaxF8, size_t a_boxNumber, void** a_customPrimPtrs, size_t a_customPrimCount)
-// {
-//   // append data to global arrays and fix offsets
-//   auto presets = BuilderPresetsFromString(m_buildName.c_str());
-//   auto layout  = LayoutPresetsFromString(m_layoutName.c_str());
-//   auto bvhData = BuildBVHFatCustom((const BVHNode*)boxMinMaxF8, a_boxNumber, presets, layout);
-//   
-//   m_allNodePairs.insert(m_allNodePairs.end(), bvhData.nodes.begin(), bvhData.nodes.end());
-// 
-//   const size_t oldSize = m_primIdCount.size();
-//   m_primIdCount.resize(oldSize + a_boxNumber);
-//   for (int i=0; i<a_boxNumber; i++)
-//     m_primIdCount[oldSize+i] = i;
-//   startEnd.push_back(uint2(uint32_t(oldSize), uint32_t(m_primIdCount.size())));
-//   
-//   m_geomTags.push_back(a_typeId);
-// 
-//   return uint32_t(startEnd.size() - 1);
-// }
-
 uint32_t BVH2CommonLoftRT::AddGeom_AABB(uint32_t a_typeId, const CRT_AABB* boxMinMaxF8, size_t a_boxNumber, void** a_customPrimPtrs, size_t a_customPrimCount)
 {
+  Box4f bbox;
+  for (size_t i = 0; i < a_boxNumber; i++) // TODO: may omit this loop, take two first bvh nodes
+  {
+    Box4f currBox(boxMinMaxF8[i].boxMin, boxMinMaxF8[i].boxMax);
+    bbox.include(currBox);
+  }
+
   auto presets = cbvh2::BuilderPresetsFromString(m_builderName.c_str());
   auto bvhData = cbvh2::BuildBVH( (const cbvh2::BVHNode*)boxMinMaxF8, a_boxNumber, presets);
+  
+  m_bvhOffsets.push_back(uint32_t(m_allNodes.size()));
   m_allNodes.insert(m_allNodes.end(), bvhData.begin(), bvhData.end());
+  
+  bbox.boxMin.w = LiteMath::as_float(uint32_t(1)); // store 'm_geomSize[geomId]';
+  bbox.boxMax.w = LiteMath::as_float(1);           // store 'm_geomTags[geomId]'; Triangles are always have zero tag
+  m_geomBoxes.push_back(bbox);
 
-  return 0;
+  const uint32_t currGeomId = uint32_t(m_geomOffsets.size());
+  m_geomOffsets.push_back(uint2(0, 0));
+
+  return currGeomId;
 }
 
 uint32_t BVH2CommonLoftRT::AddCustomGeom_FromFile(const char *geom_type_name, const char *filename, ISceneObject *fake_this)
@@ -223,15 +220,19 @@ uint32_t BVH2CommonLoftRT::AddInstance(uint32_t a_geomId, const float4x4 &a_matr
 
   // (2) append bounding box and matrices
   //
-  const uint32_t oldSize = uint32_t(m_instBoxes.size());
+  const uint32_t oldSize  = uint32_t(m_instBoxes.size());
+  const uint32_t geomSize = LiteMath::as_uint(m_geomBoxes[a_geomId].boxMin.w); // m_geomSize[a_geomId];
+  const uint32_t geomTags = LiteMath::as_uint(m_geomBoxes[a_geomId].boxMax.w); // m_geomTags[a_geomId];
 
   m_instBoxes.push_back(newBox);
   m_instMatricesFwd.push_back(a_matrix);
   m_instMatricesInv.push_back(inverse4x4(a_matrix));
-  m_geomIdByInstId.push_back(a_geomId);
+  
+  const uint32_t geomRemap = (a_geomId & GEOM_ID_MASK) | (geomTags << GEOM_ID_SHFT);
+  m_geomIdByInstId.push_back(geomRemap);
   
   totalinstNumInst++;
-  totalTrisInst += m_geomSize[a_geomId];
+  totalTrisInst += geomSize; 
   return oldSize;
 }
 
