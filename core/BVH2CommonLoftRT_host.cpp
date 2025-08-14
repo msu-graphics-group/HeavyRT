@@ -98,7 +98,7 @@ uint32_t BVH2CommonLoftRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_v
   //m_geomSize.push_back(uint32_t(a_indNumber/3));
 
   bbox.boxMin.w = LiteMath::as_float(uint32_t(a_indNumber/3)); // store 'm_geomSize[geomId]';
-  bbox.boxMax.w = LiteMath::as_float(0);                       // store 'm_geomTags[geomId]'; Triangles are always have zero tag
+  bbox.boxMax.w = LiteMath::as_float(GEOM_TYPE_TRIANGLE);      // store 'm_geomTags[geomId]'; Triangles are always have zero tag
   m_geomBoxes.push_back(bbox);
 
   return currGeomId;
@@ -145,8 +145,9 @@ uint32_t BVH2CommonLoftRT::AddCustomGeom_FromFile(const char *geom_type_name, co
     CRT_AABB box;
     box.boxMin = float4(-1,-1,-1,0);
     box.boxMax = float4(+1,+1,+1,0);
-    return fake_this->AddGeom_AABB(1, &box, 1, nullptr, 0);
+    return fake_this->AddGeom_AABB(GEOM_TYPE_SPHERE, &box, 1, nullptr, 0);
   }
+  
   return 0;
 }
 

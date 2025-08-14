@@ -46,6 +46,75 @@ void BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(const float3 ray_pos, const 
   }
 }      
 
+static inline bool Quadratic(float A, float B, float C, float *t0, float *t1) {
+  // Find quadratic discriminant
+  //double discrim = (double)B * (double)B - 4. * (double)A * (double)C;
+  //if (discrim < 0.) 
+  //  return false;
+  //double rootDiscrim = std::sqrt(discrim);
+  float discrim = B * B - 4.0f * A * C;
+  if (discrim < 0.f) 
+    return false;
+  float rootDiscrim = std::sqrt(discrim);
+  float floatRootDiscrim   = float(rootDiscrim);
+  // Compute quadratic _t_ values
+  float q;
+  if ((float)B < 0.0f)
+      q = -.5f * (B - floatRootDiscrim);
+  else
+      q = -.5f * (B + floatRootDiscrim);
+  *t0 = q / A;
+  *t1 = C / q;
+  if ((float)*t0 > (float)*t1) 
+  {
+    // std::swap(*t0, *t1);
+    float temp = *t0;
+    *t0 = *t1;
+    *t1 = temp;
+  }
+  return true;
+}
+
+static inline float3 myfaceforward(const float3 n, const float3 v) { return (dot(n, v) < 0.f) ? (-1.0f)*n : n; }
+
+void BVH2CommonLoftRT::IntersectUnitSphereAtZero(const float3 rayPos, const float3 rayDir, 
+                                                 float tNear, uint32_t instId, uint32_t geomId, CRT_Hit *pHit) const
+{
+  constexpr float  radius = 1.0f;
+  //constexpr float3 center = float3(0,0,0);
+
+  // Compute _t0_ and _t1_ for ray--element intersection
+  const float3 o = rayPos; // - center;
+  const float  A = rayDir.x * rayDir.x + rayDir.y * rayDir.y + rayDir.z * rayDir.z;
+  const float  B = 2 * (rayDir.x * o.x + rayDir.y * o.y + rayDir.z * o.z);
+  const float  C = o.x * o.x + o.y * o.y + o.z * o.z - radius * radius;
+  float  t0, t1;
+  if (!Quadratic(A, B, C, &t0, &t1)) 
+    return;
+  
+  // Select intersection $t$ based on ray direction and element curvature
+  bool useCloserT = (rayDir.z > 0.0f) != (radius < 0.0f);
+  float tHit = useCloserT ? std::min(t0, t1) : std::max(t0, t1);
+  if (tHit < 0.0f) 
+    return;
+  
+  // Compute surface normal of element at ray intersection point
+  float3 norm = normalize(o + rayDir*tHit);
+         norm = myfaceforward(norm, -1.0f*rayDir);
+  
+  // put intersection params to output
+  {
+    pHit->t         = tHit;
+    pHit->primId    = 2;
+    pHit->instId    = instId;
+    pHit->geomId    = geomId;
+    pHit->coords[0] = norm.x;
+    pHit->coords[1] = norm.y;
+    pHit->coords[2] = norm.z;
+  }
+}
+
+
 //extern bool g_debugPrint;
 
 CRT_Hit BVH2CommonLoftRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFar)
@@ -156,14 +225,15 @@ CRT_Hit BVH2CommonLoftRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFa
       const uint32_t geomId     = (geomIdType & GEOM_ID_MASK);
       const uint32_t geomType   = (geomIdType & GEOM_TP_MASK) >> GEOM_ID_SHFT;
       
-      if(geomType == 0)
+      if(geomType == GEOM_TYPE_TRIANGLE)
       {
         IntersectAllPrimitivesInLeaf(ray_pos, ray_dir, posAndNear.w, instId, geomId, start, count, &hit); 
       }
-      else if(geomType == 1)
+      else if(geomType == GEOM_TYPE_SPHERE)
       {
-        int a = 2;
+        IntersectUnitSphereAtZero(ray_pos, ray_dir, posAndNear.w, instId, geomId, &hit); 
       }
+
       //if(g_debugPrint)
       //{
       //  std::cout << "seek for intersection at " << leftNodeOffset << std::endl;

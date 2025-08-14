@@ -56,17 +56,24 @@ struct BVH2CommonLoftRT : public ISceneObject
   const LiteMath::float4* GetGeomBoxes() const override { return (const LiteMath::float4*)m_geomBoxes.data(); }
 
 //protected:
+  static constexpr unsigned int GEOM_TP_MASK = 0xf0000000; // 16   types of possible geometry
+  static constexpr unsigned int GEOM_ID_MASK = 0x0fffffff; // 2^28 max geometric objects is allowed which is high enough
+  static constexpr unsigned int GEOM_ID_SHFT = 28;                               
+
+  static constexpr unsigned int GEOM_TYPE_TRIANGLE = 0;
+  static constexpr unsigned int GEOM_TYPE_SPHERE   = 1; 
+
   void IntersectAllPrimitivesInLeaf(const float3 ray_pos, const float3 ray_dir,
                                     float tNear, uint32_t instId, uint32_t geomId,
                                     uint32_t a_start, uint32_t a_count,
                                     CRT_Hit *pHit);
 
+  void IntersectUnitSphereAtZero(const float3 rayPos, const float3 rayDir, 
+                                 float tNear, uint32_t instId, uint32_t geomId, 
+                                 CRT_Hit *pHit) const;                                    
+
   virtual size_t AppendTreeData(const std::vector<BVHNode>& a_nodes, const std::vector<uint32_t>& a_indices, 
                                 const uint32_t *a_triIndices, size_t a_indNumber);
-
-  static constexpr unsigned int GEOM_TP_MASK = 0xf0000000; // 16   types of possible geometry
-  static constexpr unsigned int GEOM_ID_MASK = 0x0fffffff; // 2^28 max geometric objects is allowed which is high enough
-  static constexpr unsigned int GEOM_ID_SHFT = 28;                               
 
   std::vector<Box4f>    m_geomBoxes; // use boxMin.w as geomSize and boxMin.w as geomTag
   std::vector<Box4f>    m_instBoxes;
