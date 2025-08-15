@@ -200,6 +200,9 @@ void BVH2CommonLoftRT::CommitScene(uint32_t a_qualityLevel)
 
 uint32_t BVH2CommonLoftRT::AddInstance(uint32_t a_geomId, const float4x4 &a_matrix)
 {
+  if((a_geomId & CRT_GEOM_MASK_AABB_BIT) != 0)
+    a_geomId = (a_geomId & CRT_GEOM_MASK_AABB_BIT_RM);
+    
   const auto &box = m_geomBoxes[a_geomId];
 
   // (1) mult mesh bounding box vertices with matrix to form new bouding box for instance
