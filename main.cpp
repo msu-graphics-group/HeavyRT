@@ -54,7 +54,7 @@ int main(int argc, const char** argv)
   const char* outImageFile = "z_out.bmp";
   const char* outStatsFile = "z_stats.csv";
   bool testSingleMesh = false;
-  bool onGPU          = true;
+  bool onGPU          = false;
   bool testMode       = false;
   bool testDynamic    = false;
   int  implId         = 0;

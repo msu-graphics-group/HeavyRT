@@ -58,7 +58,8 @@ void EyeRayCaster::kernel_RayTrace(uint32_t tidX, const float4* rayPosAndNear,
     const uint XY = m_packedXY[tidX];
     const uint x  = (XY & 0x0000FFFF);
     const uint y  = (XY & 0xFFFF0000) >> 16;
-    out_color[y * m_width + x] = (hit.primId == 0xFFFFFFFF) ? 0 : m_palette[(hit.primId) % palette_size];
+    const auto colorId = (hit.primId) % palette_size;
+    out_color[y * m_width + x] = (hit.primId == 0xFFFFFFFF) ? 0 : m_palette[colorId];
   }
   else
   {

@@ -39,6 +39,8 @@ uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, fl
   const uint32_t geomId     = (geomIdType & GEOM_ID_MASK);
   const uint32_t geomType   = (geomIdType & GEOM_TP_MASK) >> GEOM_ID_SHFT;
 
+  uint32_t hitTag = 0;
+
   if(geomType == GEOM_TYPE_TRIANGLE)
   {  
     const uint2 a_geomOffsets = m_geomOffsets[info.geomId]; // or geomId
@@ -74,6 +76,7 @@ uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, fl
         pHit->geomId = info.geomId;
         pHit->coords[0] = u;
         pHit->coords[1] = v;
+        hitTag = GEOM_TYPE_TRIANGLE;
       }
     }
 
@@ -101,16 +104,18 @@ uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, fl
              norm = myfaceforward(norm, -1.0f*to_float3(rayDirAndFar));
 
       pHit->t         = tHit;
-      pHit->primId    = 2;
+      pHit->primId    = info.instId;
       pHit->instId    = info.instId;
       pHit->geomId    = info.geomId;
       pHit->coords[0] = norm.x;
       pHit->coords[1] = norm.y;
       pHit->coords[2] = norm.z;
+
+      hitTag = GEOM_TYPE_SPHERE;
     }
   }
 
-  return 0;
+  return hitTag;
 }      
 
 //extern bool g_debugPrint;
@@ -276,13 +281,18 @@ CRT_Hit BVH2CommonLoftRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFa
     
   } // end while (top >= 0)
   
-  #ifdef REMAP_PRIM_ID
-  if(hit.geomId < uint32_t(-1)) 
+  if(hit.instId != uint32_t(-1) && hit.geomId != uint32_t(-1))
   {
-    const uint2 geomOffsets = m_geomOffsets[hit.geomId];
-    hit.primId = m_primIndices[geomOffsets.x/3 + hit.primId];
+    const uint32_t geomIdType = m_geomIdByInstId[hit.instId];
+    const uint32_t geomId     = (geomIdType & GEOM_ID_MASK);
+    const uint32_t geomType   = (geomIdType & GEOM_TP_MASK) >> GEOM_ID_SHFT;
+  
+    if(geomType == GEOM_TYPE_TRIANGLE) // remap primitive id only for triangles
+    {
+      const uint2 geomOffsets = m_geomOffsets[hit.geomId];
+      hit.primId = m_primIndices[geomOffsets.x/3 + hit.primId];
+    }
   }
-  #endif
 
   return hit;
 }

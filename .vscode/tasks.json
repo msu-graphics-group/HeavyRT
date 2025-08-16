@@ -38,4 +38,14 @@
                 "$gcc"
             ]
         },
+
+        {
+            "label": "BuildShaders: eye_rq_glsl",
+            "type": "shell",
+            "command": "cd examples/01_eye_rays/shaders_gpu_rq && bash build.sh",
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
     ]

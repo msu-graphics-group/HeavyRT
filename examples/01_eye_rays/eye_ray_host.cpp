@@ -130,30 +130,14 @@ scene.LoadState(a_path) < 0
       typedGeomId.push_back(geomId);
     }
   }
-
-  //for(auto meshPath : scene.MeshFiles())
-  //{
-  //  std::cout << "[LoadScene]: mesh = " << meshPath.c_str() << std::endl;
-  //
-  //  #if defined(__ANDROID__)
-  //  auto currMesh = cmesh::LoadMeshFromVSGF2(assetManager, meshPath.c_str());
-  //  #else
-  //  auto currMesh = cmesh::LoadMeshFromVSGF2(meshPath.c_str());
-  //  #endif
-  //  auto geomId   = m_pAccelStruct->AddGeom_Triangles3f((const float*)currMesh.vPos4f.data(), currMesh.vPos4f.size(),
-  //                                                      currMesh.indices.data(), currMesh.indices.size(), BUILD_HIGH, sizeof(float)*4);
-  //
-  //  (void)geomId; // silence "unused variable" compiler warnings
-  //  m_totalTris += currMesh.indices.size()/3;
-  //  trisPerObject.push_back(currMesh.indices.size()/3);
-  //}
   
   m_totalTrisVisiable = 0;
   m_pAccelStruct->ClearScene();
   for(auto inst : scene.InstancesGeom())
   {
     auto typedGId = typedGeomId[inst.geomId];
-    m_pAccelStruct->AddInstance(typedGId, inst.matrix);
+    auto instId = m_pAccelStruct->AddInstance(typedGId, inst.matrix);
+    (void)instId;
     m_totalTrisVisiable += trisPerObject[inst.geomId];
   }
   m_pAccelStruct->CommitScene();
@@ -414,25 +398,6 @@ const char* EyeRayCaster::Name() const
 CustomMetrics EyeRayCaster::GetMetrics() const 
 {
   CustomMetrics res = {};
-  #ifndef USE_VULKAN
-  auto traceMetrics = m_pAccelStruct->GetStats();
-  for (int i = 0; i < TREELET_ARR_SIZE; i++) {
-    res.ljc_data[i] = traceMetrics.avgLJC[i];
-    res.cmc_data[i] = traceMetrics.avgCMC[i];
-    res.wss_data[i] = float(traceMetrics.avgWSS[i])/1000.0f;
-  }
-
-  res.common_data[0] = traceMetrics.avgNC;
-  res.common_data[1] = traceMetrics.avgLC;
-  res.common_data[2] = float(m_avgLCV);
-  res.common_data[3] = traceMetrics.avgTC;
-  res.common_data[4] = traceMetrics.avgBLB;
-  res.common_data[5] = traceMetrics.avgSOC;
-  res.common_data[6] = traceMetrics.avgSBL;
-  res.common_data[7] = 0.0f; // traceMetrics.avgTS;
-  res.size_data[0] = traceMetrics.bvhTotalSize;
-  res.size_data[1] = traceMetrics.geomTotalSize;
-  #endif
   res.prims_count[0] = m_totalTrisVisiable;
   res.prims_count[1] = m_totalTris;
   return res;

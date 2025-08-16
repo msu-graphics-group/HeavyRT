@@ -494,24 +494,6 @@ void RTAO::GetExecutionTime(const char* a_funcName, float a_out[4])
 CustomMetrics RTAO::GetMetrics() const
 {  
   CustomMetrics res = {};
-  #ifndef USE_VULKAN
-  auto traceMetrics = m_pAccelStruct->GetStats();
-  for (int i = 0; i < TREELET_ARR_SIZE; i++) {
-    res.ljc_data[i] = traceMetrics.avgLJC[i];
-    res.cmc_data[i] = traceMetrics.avgCMC[i];
-    res.wss_data[i] = float(traceMetrics.avgWSS[i])/1000.0f;
-  }
-  res.common_data[0] = traceMetrics.avgNC;
-  res.common_data[1] = traceMetrics.avgLC;
-  res.common_data[2] = float(m_avgLCV);
-  res.common_data[3] = traceMetrics.avgTC;
-  res.common_data[4] = traceMetrics.avgBLB;
-  res.common_data[5] = traceMetrics.avgSOC;
-  res.common_data[6] = traceMetrics.avgSBL;
-  res.common_data[7] = 0.0f; // traceMetrics.avgTS;
-  res.size_data[0]   = traceMetrics_bvhTotalSize;
-  res.size_data[1]   = traceMetrics_geomTotalSize;
-  #endif
   res.prims_count[0] = m_totalTrisVisiable;
   res.prims_count[1] = m_totalTris;
   return res;

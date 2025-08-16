@@ -244,8 +244,7 @@ uint32_t BVH2CommonLoftRT::AddInstance(uint32_t a_geomId, const float4x4 &a_matr
 
 void BVH2CommonLoftRT::UpdateInstance(uint32_t a_instanceId, const float4x4 &a_matrix)
 {
-  std::cout << "[BVH2CommonRT::UpdateInstance]: "
-            << "not implemeted!" << std::endl;
+  std::cout << "[BVH2CommonRT::UpdateInstance]: " << "not implemeted!" << std::endl;
 }
 
 ISceneObject *MakeBVH2CommonLoftRT(const char *a_implName, const char* a_buildName) { return new BVH2CommonLoftRT(a_buildName); }
