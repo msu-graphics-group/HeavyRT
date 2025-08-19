@@ -90,9 +90,7 @@ scene.LoadState(a_path) < 0
   }
 
   std::vector<uint64_t> trisPerObject;
-  std::vector<uint32_t> typedGeomId;
   trisPerObject.reserve(1000);
-  typedGeomId.reserve(trisPerObject.capacity());
   m_totalTris = 0;
 
   m_pAccelStruct->ClearGeom();
@@ -121,13 +119,13 @@ scene.LoadState(a_path) < 0
 
       m_totalTris += currMesh.indices.size()/3;
       trisPerObject.push_back(currMesh.indices.size()/3);
-      typedGeomId.push_back(geomId);
+      //typedGeomId.push_back(geomId);
     }
     else 
     {
       std::cout << "[LoadCust]: type = " << geomTypeA.c_str() << std::endl;
       auto geomId = m_pAccelStruct->AddCustomGeom_FromFile(geomTypeA.c_str(), meshPath.c_str(), m_pAccelStruct.get());
-      typedGeomId.push_back(geomId);
+      //typedGeomId.push_back(geomId);
     }
   }
   
@@ -135,8 +133,8 @@ scene.LoadState(a_path) < 0
   m_pAccelStruct->ClearScene();
   for(auto inst : scene.InstancesGeom())
   {
-    auto typedGId = typedGeomId[inst.geomId];
-    auto instId = m_pAccelStruct->AddInstance(typedGId, inst.matrix);
+    //auto typedGId = typedGeomId[inst.geomId];
+    auto instId = m_pAccelStruct->AddInstance(inst.geomId, inst.matrix);
     (void)instId;
     m_totalTrisVisiable += trisPerObject[inst.geomId];
   }

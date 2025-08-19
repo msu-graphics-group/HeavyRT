@@ -12,13 +12,16 @@
 using LiteMath::float4;
 using LiteMath::uint;
 
-enum BuildQuality
+enum BuildOptions 
 {
-  BUILD_LOW    = 0, ///< Prefer Fast Build
-  BUILD_MEDIUM = 1, ///< Standart sweep builder
-  BUILD_HIGH   = 2, ///< Enable Advanced techniques like Split BVH or Early Split Clipping
-  BUILD_REFIT  = 3, ///< Don't change hirarchy, recompute bouding boxes.
-  MOTION_BLUR  = 0x00000010, //
+  NONE                   = 0x00000000, //
+  BUILD_LOW              = 0x00000001, //
+  BUILD_MEDIUM           = 0x00000002, //
+  BUILD_HIGH             = 0x00000004, //
+  BUILD_REFIT            = 0x00000008, //
+  MOTION_BLUR            = 0x00000010, //
+  BUILD_SKIP             = 0x00000020, // this is for internal usage: when use custome prims with HW accelerated BVH traversal, we don't have to build our own BVH
+  BUILD_OPTIONS_MAX_ENUM = 0x7FFFFFFF
 };
 
 /**
@@ -135,7 +138,7 @@ struct ISceneObject
   \param a_customPrimCount - size of array pointer. It is allowd to represent each primitive with several AABB on input. For example, if we want 4 boxes per primitive, for a_customPrimCount equals to 10, a_boxNumber must be 40 
   \return id of added geometry
   */
-  virtual uint32_t AddGeom_AABB(uint32_t a_typeId, const CRT_AABB* boxMinMaxF8, size_t a_boxNumber, void** a_customPrimPtrs = nullptr, size_t a_customPrimCount = 0) { return 0; }
+  virtual uint32_t AddGeom_AABB(uint32_t a_typeId, const CRT_AABB* boxMinMaxF8, size_t a_boxNumber, uint32_t a_qualityLevel = BUILD_HIGH, void** a_customPrimPtrs = nullptr, size_t a_customPrimCount = 0) { return 0; }
 
   /**
   \brief Update geometry for triangle mesh to 'internal geometry library' of scene object and return geometry id

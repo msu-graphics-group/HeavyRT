@@ -88,10 +88,14 @@ uint32_t BVH2CommonLoftRT::AddGeom_Triangles3f(const float *a_vpos3f, size_t a_v
 
   // Build BVH for each geom and append it to big buffer
   //
-  auto presets = cbvh2::BuilderPresetsFromString(m_builderName.c_str());
-  auto bvhData = cbvh2::BuildBVH((const float*)(m_vertPos.data() + oldSizeVert), a_vertNumber, 16, a_triIndices, a_indNumber, presets);
-
-  const size_t oldBvhSize = AppendTreeData(bvhData.nodes, bvhData.indices, a_triIndices, a_indNumber);
+  size_t oldBvhSize = 0;
+  if((a_qualityLevel & BUILD_SKIP) == 0)
+  {
+    auto presets = cbvh2::BuilderPresetsFromString(m_builderName.c_str());
+    auto bvhData = cbvh2::BuildBVH((const float*)(m_vertPos.data() + oldSizeVert), a_vertNumber, 16, a_triIndices, a_indNumber, presets);
+  
+    oldBvhSize = AppendTreeData(bvhData.nodes, bvhData.indices, a_triIndices, a_indNumber);
+  }
   m_bvhOffsets.push_back(uint32_t(oldBvhSize));
 
   totalTrisMem += (a_indNumber/3);
@@ -113,7 +117,7 @@ void BVH2CommonLoftRT::UpdateGeom_Triangles3f(uint32_t a_geomId, const float *a_
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-uint32_t BVH2CommonLoftRT::AddGeom_AABB(uint32_t a_typeId, const CRT_AABB* boxMinMaxF8, size_t a_boxNumber, void** a_customPrimPtrs, size_t a_customPrimCount)
+uint32_t BVH2CommonLoftRT::AddGeom_AABB(uint32_t a_typeId, const CRT_AABB* boxMinMaxF8, size_t a_boxNumber, uint32_t a_buildFlags, void** a_customPrimPtrs, size_t a_customPrimCount)
 {
   Box4f bbox;
   for (size_t i = 0; i < a_boxNumber; i++) // TODO: may omit this loop, take two first bvh nodes
@@ -121,13 +125,16 @@ uint32_t BVH2CommonLoftRT::AddGeom_AABB(uint32_t a_typeId, const CRT_AABB* boxMi
     Box4f currBox(boxMinMaxF8[i].boxMin, boxMinMaxF8[i].boxMax);
     bbox.include(currBox);
   }
+  
+  if((a_buildFlags & BUILD_SKIP) == 0)
+  {
+    auto presets = cbvh2::BuilderPresetsFromString(m_builderName.c_str());
+    auto bvhData = cbvh2::BuildBVH( (const cbvh2::BVHNode*)boxMinMaxF8, a_boxNumber, presets);
+    
+    m_bvhOffsets.push_back(uint32_t(m_allNodes.size()));
+    m_allNodes.insert(m_allNodes.end(), bvhData.begin(), bvhData.end());
+  }
 
-  auto presets = cbvh2::BuilderPresetsFromString(m_builderName.c_str());
-  auto bvhData = cbvh2::BuildBVH( (const cbvh2::BVHNode*)boxMinMaxF8, a_boxNumber, presets);
-  
-  m_bvhOffsets.push_back(uint32_t(m_allNodes.size()));
-  m_allNodes.insert(m_allNodes.end(), bvhData.begin(), bvhData.end());
-  
   bbox.boxMin.w = LiteMath::as_float(uint32_t(1)); // store 'm_geomSize[geomId]';
   bbox.boxMax.w = LiteMath::as_float(1);           // store 'm_geomTags[geomId]'; Triangles are always have zero tag
   m_geomBoxes.push_back(bbox);
@@ -145,7 +152,7 @@ uint32_t BVH2CommonLoftRT::AddCustomGeom_FromFile(const char *geom_type_name, co
     CRT_AABB box;
     box.boxMin = float4(-1,-1,-1,0);
     box.boxMax = float4(+1,+1,+1,0);
-    return fake_this->AddGeom_AABB(GEOM_TYPE_SPHERE, &box, 1, nullptr, 0);
+    return fake_this->AddGeom_AABB(GEOM_TYPE_SPHERE, &box, 1);
   }
   
   return 0;
