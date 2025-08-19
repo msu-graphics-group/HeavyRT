@@ -23,8 +23,10 @@ using LiteMath::Box4f;
 
 //#include "aligned_alloc.h"
 #include "builders/cbvh.h"
-
 using cbvh2::BVHNode;
+
+#define ENABLE_SPHERES
+#define ENABLE_MANDELBULB
 
 struct BVH2CommonLoftRT : public ISceneObject
 {
@@ -66,8 +68,9 @@ struct BVH2CommonLoftRT : public ISceneObject
   static constexpr unsigned int GEOM_ID_MASK = 0x0fffffff; // 2^28 max geometric objects is allowed which is high enough
   static constexpr unsigned int GEOM_ID_SHFT = 28;                               
 
-  static constexpr unsigned int GEOM_TYPE_TRIANGLE = 0;
-  static constexpr unsigned int GEOM_TYPE_SPHERE   = 1; 
+  static constexpr unsigned int GEOM_TYPE_TRIANGLE   = 0;
+  static constexpr unsigned int GEOM_TYPE_SPHERE     = 1;
+  static constexpr unsigned int GEOM_TYPE_MANDELBULB = 2; 
 
   uint32_t IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4 rayDirAndFar, CRT_LeafInfo info, CRT_Hit *pHit);                               
 

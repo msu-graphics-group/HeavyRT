@@ -136,7 +136,7 @@ uint32_t BVH2CommonLoftRT::AddGeom_AABB(uint32_t a_typeId, const CRT_AABB* boxMi
   }
 
   bbox.boxMin.w = LiteMath::as_float(uint32_t(1)); // store 'm_geomSize[geomId]';
-  bbox.boxMax.w = LiteMath::as_float(1);           // store 'm_geomTags[geomId]'; Triangles are always have zero tag
+  bbox.boxMax.w = LiteMath::as_float(a_typeId);    // store 'm_geomTags[geomId]'; Triangles are always have zero tag
   m_geomBoxes.push_back(bbox);
 
   const uint32_t currGeomId = uint32_t(m_geomOffsets.size());
@@ -153,6 +153,13 @@ uint32_t BVH2CommonLoftRT::AddCustomGeom_FromFile(const char *geom_type_name, co
     box.boxMin = float4(-1,-1,-1,0);
     box.boxMax = float4(+1,+1,+1,0);
     return fake_this->AddGeom_AABB(GEOM_TYPE_SPHERE, &box, 1);
+  }
+  else if(std::string(geom_type_name) == "mandelbulb")
+  {
+    CRT_AABB box;
+    box.boxMin = float4(-1,-1,-1,0);
+    box.boxMax = float4(+1,+1,+1,0);
+    return fake_this->AddGeom_AABB(GEOM_TYPE_MANDELBULB, &box, 1);
   }
   
   return 0;

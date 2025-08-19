@@ -6,6 +6,9 @@
 
 #include "BVH2CommonLoftRT.h"
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 static inline bool Quadratic(float A, float B, float C, float *t0, float *t1) 
 {
   float discrim = B * B - 4.0f * A * C;
@@ -32,6 +35,72 @@ static inline bool Quadratic(float A, float B, float C, float *t0, float *t1)
 }
 
 static inline float3 myfaceforward(const float3 n, const float3 v) { return (dot(n, v) < 0.f) ? (-1.0f)*n : n; }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using std::acos;
+using std::atan2;
+using std::pow;
+using std::log;
+using std::min;
+using std::max;
+
+float mandelbulb_sdf(float3 pos) 
+{
+  const float mandelbulb_power    = 8.0f;
+  const int   mandelbulb_iter_num = 16;
+  
+	float3 z = pos;
+	float dr = 1.0f;
+	float r  = 0.0f;
+	for (int i = 0; i < mandelbulb_iter_num ; i++)
+	{
+		r = length(z);
+		if (r > 1.5f) 
+      break;
+		
+		// convert to polar coordinates
+		float theta = acos(z.z / r);
+		float phi   = atan2(z.y, z.x);
+
+		dr = pow( r, mandelbulb_power-1.0f)*mandelbulb_power*dr + 1.0f;
+		
+		// scale and rotate the point
+		float zr = pow(r, mandelbulb_power);
+		theta = theta*mandelbulb_power;
+		phi   = phi*mandelbulb_power;
+		
+		// convert back to cartesian coordinates
+		z = pos + zr*float3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
+	}
+	return 0.5f*log(r)*r/dr;
+}
+
+float ray_marching_sdf(const float3 ray_pos, const float3 ray_dir)
+{
+  const float epsilon = 0.0002f;
+  const float2 boxHit = RayBoxIntersection2(ray_pos, SafeInverse(ray_dir), float3(-1,-1,-1), float3(+1,+1,+1));
+
+	float depth = boxHit.x;
+	int steps   = 0;
+  float dist  = epsilon*2.0f;
+
+	while(depth <= boxHit.y && dist > epsilon && steps < 100)
+	{
+		dist   = mandelbulb_sdf(ray_pos + depth*ray_dir);
+		depth += dist;
+		steps++;
+	}
+
+  if(depth > boxHit.y || steps > 100)
+    depth = -1.0f;
+   
+	return depth;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4 rayDirAndFar, CRT_LeafInfo info, CRT_Hit *pHit)
 {
@@ -81,6 +150,7 @@ uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, fl
     }
 
   } // triangles
+  #ifdef ENABLE_SPHERES
   else if(geomType == GEOM_TYPE_SPHERE)
   {
     constexpr float  radius = 1.0f;
@@ -114,7 +184,26 @@ uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, fl
       hitTag = GEOM_TYPE_SPHERE;
     }
   }
+  #endif
+  #ifdef ENABLE_MANDELBULB
+  else if(geomType == GEOM_TYPE_MANDELBULB)
+  {
+    float tHit = ray_marching_sdf(to_float3(rayPosAndNear), to_float3(rayDirAndFar));
+    if(tHit > rayPosAndNear.w && tHit < pHit->t)
+    {
+      pHit->t         = tHit;
+      pHit->primId    = info.instId;
+      pHit->instId    = info.instId;
+      pHit->geomId    = info.geomId;
 
+      pHit->coords[0] = 0.0f; // TODO: istimate it
+      pHit->coords[1] = 0.0f;
+      pHit->coords[2] = 0.0f;
+
+      hitTag = GEOM_TYPE_MANDELBULB;
+    }
+  }
+  #endif
   return hitTag;
 }      
 
