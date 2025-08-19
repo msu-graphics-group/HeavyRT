@@ -114,7 +114,7 @@
         },
 
         {
-            "name"   : "SphereCornell(BVH2_LOFT_GPU)",
+            "name"   : "SphereCornell(CS)",
             "type"   : "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/render_app",
@@ -135,7 +135,7 @@
         },
 
            {
-            "name"   : "SphereCornell(RTX)",
+            "name"   : "SphereCornell(RQ)",
             "type"   : "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/render_app",
