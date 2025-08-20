@@ -74,11 +74,8 @@ protected:
 
   void SetAORadius(float radius);
 
-  void kernel_InitEyeRay(uint32_t tidX, uint32_t tidY, LiteMath::float4* rayPosAndNear, LiteMath::float4* rayDirAndFar, float* visibility);
   void kernel_AO2Color(uint32_t tidX, uint32_t tidY, const LiteMath::float4* positions, const float* visibility, uint32_t* out_color);
-
-  void kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, const LiteMath::float4* rayPosAndNear,
-                           const LiteMath::float4* rayDirAndFar, LiteMath::float4* positions);
+  void kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, float4* positions, float* visibility);
 
   #ifdef KERNEL_SLICER
   virtual void CalcAO(uint32_t* a_outColor __attribute__((size("tidX*tidY"))), uint32_t tidX, uint32_t tidY);
@@ -89,11 +86,7 @@ protected:
   virtual void CalcAOBlock(uint32_t* a_outColor, uint32_t a_width, uint32_t a_height, uint32_t a_passNumber);
 
   void CastSingleAORay(uint32_t tidX, uint32_t tidY, uint32_t tidZ, float* ao_tex, int a_passNumber);
-  void kernel_InitAORay(uint32_t tidX, uint32_t tidY, uint32_t tidZ,
-                        LiteMath::float4* rayPosAndNear, LiteMath::float4* rayDirAndFar,
-                        const LiteMath::float4* positions);
-  void kernel_TraceAORay(uint32_t tidX, uint32_t tidY,
-                         const LiteMath::float4* rayPosAndNear, const LiteMath::float4* rayDirAndFar, float* out_visibility);
+  void kernel_TraceAORay(uint32_t tidX, uint32_t tidY, int32_t tidZ, const float4* positions, float* out_visibility);
 
   static constexpr uint32_t AO_PASS_COUNT = 1;
   static constexpr uint32_t AO_TILE_SIZE  = 128;

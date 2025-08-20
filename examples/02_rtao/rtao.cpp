@@ -45,15 +45,13 @@ void RTAO::CalcAOBlock(uint32_t* a_outColor, uint32_t a_width, uint32_t a_height
 
 void RTAO::CalcAO(uint32_t* a_outColor, uint32_t tidX, uint32_t tidY)
 {
-  float4 rayPosAndNear, rayDirAndFar, hitPosNorm;
-  float visibility;
+  float4 hitPosNorm;
+  float  visibility;
 
-  kernel_InitEyeRay  (tidX, tidY, &rayPosAndNear, &rayDirAndFar, &visibility); // ==> (rayPosAndNear, rayDirAndFar, visibility)
-  kernel_TraceEyeRay2(tidX, tidY, &rayPosAndNear, &rayDirAndFar, &hitPosNorm); // ==> (hitPos,hitNorm)
+  kernel_TraceEyeRay2(tidX, tidY, &hitPosNorm, &visibility); // ==> (hitPos,hitNorm,visibility)
   
   for(uint32_t tidZ = 0; tidZ < m_aoRaysCount; tidZ++) {
-    kernel_InitAORay (tidX, tidY, tidZ, &rayPosAndNear, &rayDirAndFar, &hitPosNorm); // ==> (rayPosAndNear, rayDirAndFar, cosAlpha)
-    kernel_TraceAORay(tidX, tidY,       &rayPosAndNear, &rayDirAndFar, &visibility); // ==> visibility
+    kernel_TraceAORay(tidX, tidY, tidZ, &hitPosNorm, &visibility); // ==> visibility
   }
 
   kernel_AO2Color(tidX, tidY, &hitPosNorm, &visibility, a_outColor); // ==> a_outColor
@@ -77,11 +75,17 @@ static float3 calcTriangleNormal(const float3 *A_pos, const float3 *B_pos, const
   return cross((*B_pos) - (*A_pos), (*C_pos) - (*A_pos));
 }
 
-void RTAO::kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, const float4* rayPosAndNear,
-                               const float4* rayDirAndFar, float4* positions)
+void RTAO::kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, float4* positions, float* visibility)
 {
-  const float4 rayPos = *rayPosAndNear;
-  const float4 rayDir = *rayDirAndFar ;
+  float3 rayDir1 = EyeRayDirNormalized((float(tidX)+0.5f)/float(m_width), 
+                                       (float(tidY)+0.5f)/float(m_height), m_projInv);
+  float3 rayPos1 = float3(0,0,0);
+
+  transform_ray3f(m_worldViewInv, &rayPos1, &rayDir1);
+
+  const float4 rayPos = to_float4(rayPos1, m_zNearFar.x); // 0.0f
+  const float4 rayDir = to_float4(rayDir1, m_zNearFar.y); // FLT_MAX
+  *visibility    = 0.0f;
 
   if(tidX == 209 && tidY == 73)
   {
@@ -145,45 +149,26 @@ void RTAO::kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, const float4* rayPo
   *positions = to_float4(hitPos, as_float(normalCompressed));
 }
 
-void RTAO::kernel_InitEyeRay(uint32_t tidX, uint32_t tidY, float4* rayPosAndNear, float4* rayDirAndFar, float* visibility)
+void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t tidY, int32_t tidZ, const float4* positions, float* out_visibility)
 {
-  float3 rayDir = EyeRayDirNormalized((float(tidX)+0.5f)/float(m_width), 
-                                      (float(tidY)+0.5f)/float(m_height), m_projInv);
-  float3 rayPos = float3(0,0,0);
-
-  transform_ray3f(m_worldViewInv, &rayPos, &rayDir);
-  
-  *rayPosAndNear = to_float4(rayPos, m_zNearFar.x); // 0.0f
-  *rayDirAndFar  = to_float4(rayDir, m_zNearFar.y); // FLT_MAX
-  *visibility    = 0.0f;
-}
-
-
-void RTAO::kernel_InitAORay(uint32_t tidX, uint32_t tidY, uint32_t tidZ,
-                            float4* rayPosAndNear, float4* rayDirAndFar, const float4* positions)
-{
-  const float4 rayPos = *positions;
-  if (rayPos.y>=AO_HIT_BACK) // no hit point of screen
+  const float4 rayPos1 = *positions;
+  if (rayPos1.y>=AO_HIT_BACK) // no hit point of screen
     return;
 
-  const float3 normal = decodeNormal(as_uint(rayPos.w)); // to_float3(*normals);
+  const float3 normal = decodeNormal(as_uint(rayPos1.w)); // to_float3(*normals);
 
   const uint32_t xTiled = tidX % AO_TILE_SIZE;
   const uint32_t yTiled = tidY % AO_TILE_SIZE;
 
   float2 uv      = m_aoRandomsTile[(yTiled * AO_TILE_SIZE + xTiled)*m_aoRaysCount + tidZ];
-  float3 rayDir  = MapSampleToCosineDistribution(uv.x, uv.y, normal, normal, 1.0f);
-  float3 rayPos2 = OffsRayPos(to_float3(rayPos), normal, rayDir);
+  float3 rayDir2 = MapSampleToCosineDistribution(uv.x, uv.y, normal, normal, 1.0f);
+  float3 rayPos2 = OffsRayPos(to_float3(rayPos1), normal, rayDir2);
+  
+  ////////////////////////////////////////////////////////////////////////////////////////
 
-  *rayPosAndNear = to_float4(rayPos2, 0.0f); // rayPos.w
-  *rayDirAndFar  = to_float4(rayDir, m_aoMaxRadius);
-}
+  const float4 rayPos = to_float4(rayPos2, 0.0f); // rayPos.w
+  const float4 rayDir = to_float4(rayDir2, m_aoMaxRadius);
 
-void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t tidY,
-                             const float4* rayPosAndNear, const float4* rayDirAndFar, float* out_visibility)
-{
-  const float4 rayPos = *rayPosAndNear;
-  const float4 rayDir = *rayDirAndFar ;
   if (rayPos.y>=AO_HIT_BACK)
     return;
   
@@ -199,4 +184,5 @@ void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t tidY,
   if(hit)
     *out_visibility = *out_visibility + 1.0f;
   #endif
+  
 }

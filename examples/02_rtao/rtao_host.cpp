@@ -156,9 +156,10 @@ scene.LoadState(assetManager, a_path) < 0
       (void)geomId;
       //typedGeomId.push_back(geomId);
       
+      const float scale = 2.0f;
       LiteMath::Box4f box;
-      box.boxMin = float4(-2,-2,-2,0);
-      box.boxMax = float4(+2,+2,+2,0);
+      box.boxMin = float4(-1,-1,-1,0)*scale;
+      box.boxMax = float4(+1,+1,+1,0)*scale;
       meshBoxes.push_back(box);
       m_matIdOffsets.push_back(0);
       m_vertOffset.push_back(0);
