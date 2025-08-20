@@ -72,12 +72,33 @@
         },
 
         {
-            "name"   : "BunnyCornell(BVH2_LOFT)",
+            "name"   : "BunnyCornellAO(CPU)",
             "type"   : "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/render_app",
-            "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/a_cornell_bunny/statex_00001.xml", //"-width", "512", "-height", "512",
-                        "-accel", "BVH2_LOFT", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y01_bunny.bmp"], 
+            "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/a_cornell_bunny/statex_00001.xml", "-width", "512", "-height", "512",
+                        "-render", "RTAO", "-accel", "BVH2_LOFT", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y01_bunny.bmp", "-gpu", "0"], 
+            "stopAtEntry": false,
+            "cwd"    : "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+
+         {
+            "name"   : "SphereCornellAO(CPU)",
+            "type"   : "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/render_app",
+            "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/a_cornell_bunny/sphere_in_cornell.xml", "-width", "512", "-height", "512",
+                        "-render", "RTAO", "-accel", "BVH2_LOFT", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y01_sphere_cpu.bmp", "-gpu", "0"], 
             "stopAtEntry": false,
             "cwd"    : "${workspaceFolder}",
             "environment": [],
@@ -93,12 +114,12 @@
         },
 
         {
-            "name"   : "SphereCornell(BVH2_LOFT)",
+            "name"   : "SphereCornell(CPU)",
             "type"   : "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/render_app",
             "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/a_cornell_bunny/sphere_in_cornell.xml", "-width", "512", "-height", "512",
-                        "-accel", "BVH2_LOFT", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y01_bunny.bmp"], 
+                        "-accel", "BVH2_LOFT", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y01_sphere_cpu.bmp", "-gpu", "0"], 
             "stopAtEntry": false,
             "cwd"    : "${workspaceFolder}",
             "environment": [],

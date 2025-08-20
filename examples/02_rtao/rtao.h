@@ -11,6 +11,7 @@
 #include "LiteMath.h"
 #include "HeavyRT.h"
 #include "IRenderer.h"
+#include "raytrace_common.h"
 
 #define RTAO_USE_CLOSEST_HIT
 

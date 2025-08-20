@@ -6,6 +6,22 @@
 
 #include "BVH2CommonLoftRT.h"
 
+using std::acos;
+using std::atan2;
+using std::pow;
+using std::log;
+using std::min;
+using std::max;
+using std::abs;
+
+//Octahedral Normal Vectors (ONV) encoding https://jcgt.org/published/0003/02/01/
+static float2 encode_normal(float3 v)
+{
+  float2 p = float2(v.x, v.y) * (1.0f / (abs(v.x) + abs(v.y) + abs(v.z)));
+  float2 signNotZero = float2((p.x >= 0.0f) ? +1.0f : -1.0f, (p.y >= 0.0f) ? +1.0f : -1.0f);
+  return (v.z <= 0.0f) ? ((1.0f - abs(float2(p.y, p.x))) * signNotZero) : p;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -38,13 +54,6 @@ static inline float3 myfaceforward(const float3 n, const float3 v) { return (dot
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-using std::acos;
-using std::atan2;
-using std::pow;
-using std::log;
-using std::min;
-using std::max;
 
 float mandelbulb_sdf(float3 pos) 
 {
@@ -142,7 +151,7 @@ uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, fl
         pHit->t = t;
         pHit->primId = triId;
         pHit->instId = info.instId;
-        pHit->geomId = info.geomId;
+        pHit->geomId = info.geomId | (GEOM_TYPE_TRIANGLE << GEOM_ID_BITS);
         pHit->coords[0] = u;
         pHit->coords[1] = v;
         hitTag = GEOM_TYPE_TRIANGLE;
@@ -173,13 +182,14 @@ uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, fl
       float3 norm = normalize(o + to_float3(rayDirAndFar)*tHit);
              norm = myfaceforward(norm, -1.0f*to_float3(rayDirAndFar));
 
+      float2 normEncoded = encode_normal(norm);
+
       pHit->t         = tHit;
       pHit->primId    = info.instId;
       pHit->instId    = info.instId;
-      pHit->geomId    = info.geomId;
-      pHit->coords[0] = norm.x;
-      pHit->coords[1] = norm.y;
-      pHit->coords[2] = norm.z;
+      pHit->geomId    = info.geomId | (GEOM_TYPE_SPHERE << GEOM_ID_BITS);
+      pHit->coords[0] = normEncoded.x;
+      pHit->coords[1] = normEncoded.y;
 
       hitTag = GEOM_TYPE_SPHERE;
     }
@@ -194,7 +204,7 @@ uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, fl
       pHit->t         = tHit;
       pHit->primId    = info.instId;
       pHit->instId    = info.instId;
-      pHit->geomId    = info.geomId;
+      pHit->geomId    = info.geomId | (GEOM_TYPE_MANDELBULB << GEOM_ID_BITS);
 
       pHit->coords[0] = 0.0f; // TODO: istimate it
       pHit->coords[1] = 0.0f;

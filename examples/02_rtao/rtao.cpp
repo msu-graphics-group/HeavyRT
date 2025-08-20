@@ -83,15 +83,24 @@ void RTAO::kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, const float4* rayPo
   const float4 rayPos = *rayPosAndNear;
   const float4 rayDir = *rayDirAndFar ;
 
+  if(tidX == 209 && tidY == 73)
+  {
+    int a = 2;
+  }
+
   CRT_Hit hit = m_pAccelStruct->RayQuery_NearestHit(rayPos, rayDir);
 
-  if(hit.geomId != uint32_t(-1))
+  float3 hitNorm = float3(0,1,0);
+  float3 hitPos  = to_float3(rayPos) + 0.9999995f*hit.t*to_float3(rayDir);
+
+  const uint32_t geomId   = hit.geomId & GEOM_ID_MASK; 
+  const uint32_t geomType = hit.geomId >> GEOM_ID_BITS; 
+
+  if(geomId != GEOM_ID_MASK && geomType == 0)
   {
     const float2 uv       = float2(hit.coords[0], hit.coords[1]);
-    const float3 hitPos   = to_float3(rayPos) + 0.9999995f*hit.t*to_float3(rayDir);
-
-    const uint triOffset  = m_matIdOffsets[hit.geomId];
-    const uint vertOffset = m_vertOffset  [hit.geomId];
+    const uint triOffset  = m_matIdOffsets[geomId];
+    const uint vertOffset = m_vertOffset  [geomId];
 
     const uint A = m_triIndices[(triOffset + hit.primId)*3 + 0];
     const uint B = m_triIndices[(triOffset + hit.primId)*3 + 1];
@@ -107,7 +116,7 @@ void RTAO::kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, const float4* rayPo
     const float3 B_norm = to_float3(m_vNorm4f[B + vertOffset]);
     const float3 C_norm = to_float3(m_vNorm4f[C + vertOffset]);
 
-    float3 hitNorm      = (1.0f - uv.x - uv.y)*A_norm + uv.y*B_norm + uv.x*C_norm;
+    hitNorm = (1.0f - uv.x - uv.y)*A_norm + uv.y*B_norm + uv.x*C_norm;
    
     // transform surface point with matrix and flip normal if needed
     //
@@ -119,15 +128,21 @@ void RTAO::kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, const float4* rayPo
 
     const float dotp     = dot(to_float3(rayDir), triangleNormal);
     const float flipNorm = (dotp > 1e-5f) ? -1.0f : 1.0f; // beware of transparent materials which use normal sign to identity "inside/outside" glass for example
-    const uint normalCompressed = encodeNormal(hitNorm*flipNorm);
-
-    *positions = to_float4(hitPos, as_float(normalCompressed));
+    hitNorm = hitNorm*flipNorm;
+  }
+  else if(geomId != GEOM_ID_MASK)
+  {
+    hitNorm = decode_normal(float2(hit.coords[0], hit.coords[1]));
   }
   else
   {
-    const uint normalCompressed = encodeNormal(float3(0,1,0));
-    *positions = float4(0.0f, AO_HIT_BACK, 0.0f, as_float(normalCompressed));
+    hitPos.x = 0.0f;
+    hitPos.y = AO_HIT_BACK;
+    hitPos.z = 0.0f;
   }
+
+  const uint normalCompressed = encodeNormal(hitNorm);
+  *positions = to_float4(hitPos, as_float(normalCompressed));
 }
 
 void RTAO::kernel_InitEyeRay(uint32_t tidX, uint32_t tidY, float4* rayPosAndNear, float4* rayDirAndFar, float* visibility)

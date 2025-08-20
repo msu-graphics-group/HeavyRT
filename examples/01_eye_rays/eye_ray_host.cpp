@@ -119,12 +119,14 @@ scene.LoadState(a_path) < 0
 
       m_totalTris += currMesh.indices.size()/3;
       trisPerObject.push_back(currMesh.indices.size()/3);
+      (void)geomId;
       //typedGeomId.push_back(geomId);
     }
     else 
     {
       std::cout << "[LoadCust]: type = " << geomTypeA.c_str() << std::endl;
       auto geomId = m_pAccelStruct->AddCustomGeom_FromFile(geomTypeA.c_str(), meshPath.c_str(), m_pAccelStruct.get());
+      (void)geomId;
       //typedGeomId.push_back(geomId);
     }
   }

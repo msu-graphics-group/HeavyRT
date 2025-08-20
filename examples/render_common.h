@@ -136,6 +136,18 @@ static inline float3 decodeNormal(unsigned int a_data)
   return float3(x, y, z);
 }
 
+// Octahedral Normal Vectors (ONV) decoding https://jcgt.org/published/0003/02/01/
+static inline float3 decode_normal(float2 e)
+{
+  float3 v = float3(e.x, e.y, 1.0f - std::abs(e.x) - std::abs(e.y));
+  if (v.z < 0) 
+  {
+    float vx = v.x;
+    v.x = (1.0f - std::abs(v.y)) * ((v.x >= 0.0f) ? +1.0f : -1.0f);
+    v.y = (1.0f - std::abs( vx)) * ((v.y >= 0.0f) ? +1.0f : -1.0f);
+  }
+  return normalize(v);
+}
 
 static inline uint RealColorToUint32(float4 real_color)
 {

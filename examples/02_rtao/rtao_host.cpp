@@ -105,36 +105,64 @@ scene.LoadState(assetManager, a_path) < 0
   trisPerObject.reserve(1000);
 
   m_pAccelStruct->ClearGeom();
-  for(auto meshPath : scene.MeshFiles())
+  for(auto geomNode : scene.GeomNodes())
   {
-    std::cout << "[LoadScene]: mesh = " << meshPath.c_str() << std::endl;
-#if defined(__ANDROID__)
-    auto currMesh = cmesh::LoadMeshFromVSGF2(assetManager, meshPath.c_str());
-#else
-    auto currMesh = cmesh::LoadMeshFromVSGF2(meshPath.c_str());
-#endif
-    auto geomId   = m_pAccelStruct->AddGeom_Triangles3f((const float*)currMesh.vPos4f.data(), currMesh.vPos4f.size(),
-                                                        currMesh.indices.data(), currMesh.indices.size(), BUILD_HIGH, sizeof(float)*4);
-    (void)geomId; // silence "unused variable" compiler warnings
-    m_totalTris += currMesh.indices.size()/3;
-    trisPerObject.push_back(currMesh.indices.size()/3);
-    // we need this to estimate mesh bounding boxes
+    auto nodeNameW = std::wstring(geomNode.name());
+    auto geomTypeW = std::wstring(geomNode.attribute(L"type").as_string());
+    auto geomTypeA = hydra_xml::ws2s(geomTypeW); 
+
+    auto attr      = geomNode.attribute(L"loc");
+    auto meshLoc   = hydra_xml::ws2s(std::wstring(attr.as_string()));
+    auto meshPath  = scene.GetLibraryRoot() + "/" + meshLoc;
+
+    if(nodeNameW == L"mesh" && geomTypeW == L"vsgf")
     {
-      const float4* vPos4f = (const float4*)currMesh.vPos4f.data();
-      LiteMath::Box4f box;
-      for(size_t i=0;i<currMesh.vPos4f.size();i++)
-        box.include(vPos4f[i]);
-      meshBoxes.push_back(box);
+      std::cout << "[LoadMesh]: mesh = " << meshPath.c_str() << std::endl;
+
+      #if defined(__ANDROID__)
+      auto currMesh = cmesh::LoadMeshFromVSGF2(assetManager, meshPath.c_str());
+      #else
+      auto currMesh = cmesh::LoadMeshFromVSGF2(meshPath.c_str());
+      #endif
+      auto geomId   = m_pAccelStruct->AddGeom_Triangles3f((const float*)currMesh.vPos4f.data(), currMesh.vPos4f.size(),
+                                                          currMesh.indices.data(), currMesh.indices.size(), BUILD_HIGH, sizeof(float)*4);
+
+      m_totalTris += currMesh.indices.size()/3;
+      trisPerObject.push_back(currMesh.indices.size()/3);
+      (void)geomId;
+      
+      //// we need this to estimate mesh bounding boxes
+      {
+        const float4* vPos4f = (const float4*)currMesh.vPos4f.data();
+        LiteMath::Box4f box;
+        for(size_t i=0;i<currMesh.vPos4f.size();i++)
+          box.include(vPos4f[i]);
+        meshBoxes.push_back(box);
+      }
+    
+      m_matIdOffsets.push_back(m_matIdByPrimId.size());
+      m_vertOffset.push_back(m_vNorm4f.size());
+    
+      m_matIdByPrimId.insert(m_matIdByPrimId.end(), currMesh.matIndices.begin(), currMesh.matIndices.end());
+      m_triIndices.insert(m_triIndices.end(), currMesh.indices.begin(), currMesh.indices.end());
+    
+      m_vNorm4f.insert(m_vNorm4f.end(), currMesh.vNorm4f.begin(), currMesh.vNorm4f.end());
+      m_vPos4f.insert(m_vPos4f.end(), currMesh.vPos4f.begin(), currMesh.vPos4f.end());
     }
-
-    m_matIdOffsets.push_back(m_matIdByPrimId.size());
-    m_vertOffset.push_back(m_vNorm4f.size());
-
-    m_matIdByPrimId.insert(m_matIdByPrimId.end(), currMesh.matIndices.begin(), currMesh.matIndices.end());
-    m_triIndices.insert(m_triIndices.end(), currMesh.indices.begin(), currMesh.indices.end());
-
-    m_vNorm4f.insert(m_vNorm4f.end(), currMesh.vNorm4f.begin(), currMesh.vNorm4f.end());
-    m_vPos4f.insert(m_vPos4f.end(), currMesh.vPos4f.begin(), currMesh.vPos4f.end());
+    else 
+    {
+      std::cout << "[LoadCust]: type = " << geomTypeA.c_str() << std::endl;
+      auto geomId = m_pAccelStruct->AddCustomGeom_FromFile(geomTypeA.c_str(), meshPath.c_str(), m_pAccelStruct.get());
+      (void)geomId;
+      //typedGeomId.push_back(geomId);
+      
+      LiteMath::Box4f box;
+      box.boxMin = float4(-2,-2,-2,0);
+      box.boxMax = float4(+2,+2,+2,0);
+      meshBoxes.push_back(box);
+      m_matIdOffsets.push_back(0);
+      m_vertOffset.push_back(0);
+    }
   }
   
   m_totalTrisVisiable = 0;

@@ -89,3 +89,5 @@ static inline float3 matmul4x3(float4x4 m, float3 v)
   return to_float3(m*to_float4(v, 1.0f));
 }
 
+static constexpr unsigned GEOM_ID_BITS = 24;         // 8 bits for geom type, 24 bits for geom id; 
+static constexpr unsigned GEOM_ID_MASK = 0x00FFFFFF; // mask to extract geom id
