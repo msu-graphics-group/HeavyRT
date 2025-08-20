@@ -6,7 +6,6 @@
 #include "eye_ray.h"
 #include "render_common.h"
 
-
 void EyeRayCaster::CastRaySingle(uint32_t tidX, uint32_t* out_color)
 {
   //const uint XY = m_pakedXY[tidX];
@@ -74,58 +73,6 @@ void EyeRayCaster::kernel_RayTrace(uint32_t tidX, const float4* rayPosAndNear,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-static inline uint BlockIndex2D(uint tidX, uint tidY, uint a_width)
-{
-  const uint inBlockIdX = tidX % 4; // 4x4 blocks
-  const uint inBlockIdY = tidY % 4; // 4x4 blocks
- 
-  const uint localIndex = inBlockIdY*4 + inBlockIdX;
-  const uint wBlocks    = a_width/4;
-
-  const uint blockX     = tidX/4;
-  const uint blockY     = tidY/4;
-  const uint offset     = (blockX + blockY*wBlocks)*4*4 + localIndex;
-  return offset;
-}
-
-static inline uint SuperBlockIndex2D(uint tidX, uint tidY, uint a_width)
-{
-  const uint inBlockIdX = tidX % 4; // 4x4 blocks
-  const uint inBlockIdY = tidY % 4; // 4x4 blocks
-  const uint localIndex = inBlockIdY*4 + inBlockIdX;
-  const uint wBlocks    = a_width/4;
-  const uint blockX     = tidX/4;
-  const uint blockY     = tidY/4;
-  
-  const uint inHBlockIdX = blockX % 2; // 2x2 SuperBlocks
-  const uint inHBlockIdY = blockY % 2; // 2x2 SuperBlocks
-  const uint localIndexH = inHBlockIdY*2 + inHBlockIdX;
-  const uint wBlocksH    = wBlocks/2;
-  const uint blockHX     = blockX/2;
-  const uint blockHY     = blockY/2;
-
-  return (blockHX + blockHY*wBlocksH)*8*8 + localIndexH*4*4 + localIndex;
-}
-
-static inline uint SuperBlockIndex2DOpt(uint tidX, uint tidY, uint a_width)
-{
-  const uint inBlockIdX = tidX & 0x00000003; // 4x4 blocks
-  const uint inBlockIdY = tidY & 0x00000003; // 4x4 blocks
-  const uint localIndex = inBlockIdY*4 + inBlockIdX;
-  const uint wBlocks    = a_width >> 2;
-  const uint blockX     = tidX    >> 2;
-  const uint blockY     = tidY    >> 2;
-  
-  const uint inHBlockIdX = blockX & 0x00000001; // 2x2 SuperBlocks
-  const uint inHBlockIdY = blockY & 0x00000001; // 2x2 SuperBlocks
-  const uint localIndexH = inHBlockIdY*2 + inHBlockIdX;
-  const uint wBlocksH    = wBlocks >> 1;
-  const uint blockHX     = blockX  >> 1;
-  const uint blockHY     = blockY  >> 1;
-
-  return (blockHX + blockHY*wBlocksH)*64 + localIndexH*16 + localIndex;
-}
 
 void EyeRayCaster::kernel_PackXY(uint tidX, uint tidY, uint* out_pakedXY)
 {

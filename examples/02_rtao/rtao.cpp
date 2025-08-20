@@ -22,47 +22,79 @@ static inline uint32_t floatToGrayRGBA(float v)
 {
   return float4ToRGBA(LiteMath::float4(v,v,v, 1.0f));
 }
-////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////
 
-void RTAO::CalcAOBlock(uint32_t* a_outColor, uint32_t a_width, uint32_t a_height, uint32_t a_passNumber)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void RTAO::kernel_PackXY(uint tidX, uint tidY, uint* out_pakedXY)
+{
+  //const uint offset   = BlockIndex2D(tidX, tidY, m_width);
+  const uint offset   = SuperBlockIndex2DOpt(tidX, tidY, m_width);
+  out_pakedXY[offset] = ((tidY << 16) & 0xFFFF0000) | (tidX & 0x0000FFFF);
+}
+
+void RTAO::PackXY(uint tidX, uint tidY)
+{
+  kernel_PackXY(tidX, tidY, m_packedXY.data());
+}
+
+void RTAO::PackXYBlock(uint tidX, uint tidY, uint a_passNum)
+{
+  #pragma omp parallel for default(shared)
+  for(int y=0;y<tidY;y++)
+    for(int x=0;x<tidX;x++)
+      PackXY(x, y);
+}
+
+void RTAO::Clear(uint32_t a_width, uint32_t a_height, const char* a_what)
+{
+  PackXYBlock(a_width, a_height, 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void RTAO::CalcAOBlock(uint32_t* a_outColor, uint32_t a_size, uint32_t a_passNumber)
 {
   auto start = std::chrono::high_resolution_clock::now();
   
   #ifndef _DEBUG
   #ifndef ENABLE_METRICS
-  #pragma omp parallel for collapse (2)
+  #pragma omp parallel for
   #endif
   #endif
-  for (int j = 0; j < int(a_height); ++j)
-    for (int i = 0; i < int(a_width); ++i)
-      for(uint32_t k=0;k<a_passNumber;k++)
-        CalcAO(a_outColor, i, j);
+  for (int j = 0; j < int(a_size); ++j)
+    for(uint32_t k=0;k<a_passNumber;k++)
+      CalcAO(a_outColor, j);
 
   timeDataByName["CalcAOBlock"] = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count()/1000.f;
 }
 
-void RTAO::CalcAO(uint32_t* a_outColor, uint32_t tidX, uint32_t tidY)
+void RTAO::CalcAO(uint32_t* a_outColor, uint32_t tidX)
 {
   float4 hitPosNorm;
   float  visibility;
 
-  kernel_TraceEyeRay2(tidX, tidY, &hitPosNorm, &visibility); // ==> (hitPos,hitNorm,visibility)
+  kernel_TraceEyeRay2(tidX, &hitPosNorm, &visibility); // ==> (hitPos,hitNorm,visibility)
   
 
   for(uint32_t tidZ = 0; tidZ < m_aoRaysCount; tidZ++) { // RTVPersistent_Iters()
     //RTVPersistent_SetIter(tidZ % RTVPersistent_Iters());
-    kernel_TraceAORay(tidX, tidY, tidZ, &hitPosNorm, &visibility); // ==> visibility
+    kernel_TraceAORay(tidX, tidZ, &hitPosNorm, &visibility); // ==> visibility
   }
 
-  kernel_AO2Color(tidX, tidY, &hitPosNorm, &visibility, a_outColor); // ==> a_outColor
+  kernel_AO2Color(tidX, &hitPosNorm, &visibility, a_outColor); // ==> a_outColor
 }
 
-void RTAO::kernel_AO2Color(uint32_t tidX, uint32_t tidY, const float4* positions, const float* visibility, uint32_t* out_color)
+void RTAO::kernel_AO2Color(uint32_t tidX, const float4* positions, const float* visibility, uint32_t* out_color)
 {
+  const uint XY = m_packedXY[tidX];
+  const uint x  = (XY & 0x0000FFFF);
+  const uint y  = (XY & 0xFFFF0000) >> 16;
+
   if(positions->y >= AO_HIT_BACK)
-    out_color[tidY*m_width + tidX] = 0;
+    out_color[y*m_width + x] = 0;
   else
   {
     float visLocal = (*visibility);
@@ -72,7 +104,7 @@ void RTAO::kernel_AO2Color(uint32_t tidX, uint32_t tidY, const float4* positions
       const float sampleCount = float(AO_PASS_COUNT * m_aoRaysCount);
       const float normCoeff   = 1.0f / sampleCount;
       const float resAO       = std::pow(visLocal * normCoeff, m_power);
-      out_color[tidY*m_width + tidX] = floatToGrayRGBA(resAO);
+      out_color[y*m_width + x] = floatToGrayRGBA(resAO);
     }
   }
 }
@@ -82,10 +114,13 @@ static float3 calcTriangleNormal(const float3 *A_pos, const float3 *B_pos, const
   return cross((*B_pos) - (*A_pos), (*C_pos) - (*A_pos));
 }
 
-void RTAO::kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, float4* positions, float* visibility)
+void RTAO::kernel_TraceEyeRay2(uint32_t tidX, float4* positions, float* visibility)
 {
-  float3 rayDir1 = EyeRayDirNormalized((float(tidX)+0.5f)/float(m_width), 
-                                       (float(tidY)+0.5f)/float(m_height), m_projInv);
+  const uint XY = m_packedXY[tidX];
+  const uint x  = (XY & 0x0000FFFF);
+  const uint y  = (XY & 0xFFFF0000) >> 16;
+
+  float3 rayDir1 = EyeRayDirNormalized((float(x)+0.5f)/float(m_width), (float(y)+0.5f)/float(m_height), m_projInv);
   float3 rayPos1 = float3(0,0,0);
 
   transform_ray3f(m_worldViewInv, &rayPos1, &rayDir1);
@@ -94,7 +129,7 @@ void RTAO::kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, float4* positions, 
   const float4 rayDir = to_float4(rayDir1, m_zNearFar.y); // FLT_MAX
   *visibility    = 0.0f;
 
-  if(tidX == 209 && tidY == 73)
+  if(x == 209 && y == 73)
   {
     int a = 2;
   }
@@ -156,16 +191,20 @@ void RTAO::kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, float4* positions, 
   *positions = to_float4(hitPos, as_float(normalCompressed));
 }
 
-void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t tidY, int32_t tidZ, const float4* positions, float* out_visibility)
+void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t tidZ, const float4* positions, float* out_visibility)
 {
   const float4 rayPos1 = *positions;
   if (rayPos1.y>=AO_HIT_BACK) // no hit point of screen
     return;
 
   const float3 normal = decodeNormal(as_uint(rayPos1.w)); // to_float3(*normals);
+  
+  const uint XY = m_packedXY[tidX];
+  const uint x  = (XY & 0x0000FFFF);
+  const uint y  = (XY & 0xFFFF0000) >> 16;
 
-  const uint32_t xTiled = tidX % AO_TILE_SIZE;
-  const uint32_t yTiled = tidY % AO_TILE_SIZE;
+  const uint32_t xTiled = x % AO_TILE_SIZE;
+  const uint32_t yTiled = y % AO_TILE_SIZE;
 
   float2 uv      = m_aoRandomsTile[(yTiled * AO_TILE_SIZE + xTiled)*m_aoRaysCount + tidZ];
   float3 rayDir2 = MapSampleToCosineDistribution(uv.x, uv.y, normal, normal, 1.0f);

@@ -174,3 +174,35 @@ static inline float2 mulRows2x4(const float4 row0, const float4 row1, float2 v)
 
 static inline float clamp1f(float u, float a, float b) { return std::min(std::max(a, u), b); }
 
+static inline uint SuperBlockIndex2DOpt(uint tidX, uint tidY, uint a_width)
+{
+  const uint inBlockIdX = tidX & 0x00000003; // 4x4 blocks
+  const uint inBlockIdY = tidY & 0x00000003; // 4x4 blocks
+  const uint localIndex = inBlockIdY*4 + inBlockIdX;
+  const uint wBlocks    = a_width >> 2;
+  const uint blockX     = tidX    >> 2;
+  const uint blockY     = tidY    >> 2;
+  
+  const uint inHBlockIdX = blockX & 0x00000001; // 2x2 SuperBlocks
+  const uint inHBlockIdY = blockY & 0x00000001; // 2x2 SuperBlocks
+  const uint localIndexH = inHBlockIdY*2 + inHBlockIdX;
+  const uint wBlocksH    = wBlocks >> 1;
+  const uint blockHX     = blockX  >> 1;
+  const uint blockHY     = blockY  >> 1;
+
+  return (blockHX + blockHY*wBlocksH)*64 + localIndexH*16 + localIndex;
+}
+
+static inline uint BlockIndex2D(uint tidX, uint tidY, uint a_width)
+{
+  const uint inBlockIdX = tidX % 4; // 4x4 blocks
+  const uint inBlockIdY = tidY % 4; // 4x4 blocks
+ 
+  const uint localIndex = inBlockIdY*4 + inBlockIdX;
+  const uint wBlocks    = a_width/4;
+
+  const uint blockX     = tidX/4;
+  const uint blockY     = tidY/4;
+  const uint offset     = (blockX + blockY*wBlocks)*4*4 + localIndex;
+  return offset;
+}

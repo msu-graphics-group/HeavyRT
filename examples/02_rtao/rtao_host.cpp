@@ -23,7 +23,7 @@ RTAO::RTAO() {}
 
 void RTAO::Render(uint32_t* a_outColor, uint32_t a_width, uint32_t a_height, const char* a_what, int a_passNum)
 {
-  CalcAOBlock(a_outColor, a_width, a_height, a_passNum);
+  CalcAOBlock(a_outColor, a_width*a_height, a_passNum);
 }
 
 void RTAO::SetAORadius(float radius) {
@@ -510,6 +510,7 @@ void RTAO::SetViewport(int a_xStart, int a_yStart, int a_width, int a_height)
 {
   m_width  = a_width;
   m_height = a_height;
+  m_packedXY.resize(m_width*m_height);
 }
 
 void RTAO::GetExecutionTime(const char* a_funcName, float a_out[4])

@@ -47,8 +47,9 @@ public:
   bool LoadSingleMesh(const char* a_meshPath, const float* transform4x4ColMajor) override;
 #endif
 
-  void Clear (uint32_t a_width, uint32_t a_height, const char* a_what) override { }
+  void Clear (uint32_t a_width, uint32_t a_height, const char* a_what) override;
   void Render(uint32_t* imageData, uint32_t a_width, uint32_t a_height, const char* a_what, int a_passNum) override;
+
   void SetViewport(int a_xStart, int a_yStart, int a_width, int a_height) override; //ignores start arguments
   void SetAccelStruct(std::shared_ptr<ISceneObject> a_customAccelStruct) override { m_pAccelStruct = a_customAccelStruct;}
   std::shared_ptr<ISceneObject> GetAccelStruct() override { return m_pAccelStruct; }
@@ -72,21 +73,24 @@ public:
 
 protected:
 
-  void SetAORadius(float radius);
+  void PackXY(uint tidX, uint tidY);
+  void kernel_PackXY(uint tidX, uint tidY, uint* out_pakedXY);
+  void PackXYBlock(uint tidX, uint tidY, uint a_passNum);
 
-  void kernel_AO2Color(uint32_t tidX, uint32_t tidY, const LiteMath::float4* positions, const float* visibility, uint32_t* out_color);
-  void kernel_TraceEyeRay2(uint32_t tidX, uint32_t tidY, float4* positions, float* visibility);
+  void SetAORadius(float radius);
+  void kernel_AO2Color(uint32_t tidX, const LiteMath::float4* positions, const float* visibility, uint32_t* out_color);
+  void kernel_TraceEyeRay2(uint32_t tidX, float4* positions, float* visibility);
 
   #ifdef KERNEL_SLICER
-  virtual void CalcAO(uint32_t* a_outColor __attribute__((size("tidX*tidY"))), uint32_t tidX, uint32_t tidY);
+  virtual void CalcAO(uint32_t* a_outColor [[size("tidX")]], uint32_t tidX);
   #else
-  virtual void CalcAO(uint32_t* a_outColor, uint32_t tidX, uint32_t tidY);
+  virtual void CalcAO(uint32_t* a_outColor, uint32_t tidX);
   #endif
 
-  virtual void CalcAOBlock(uint32_t* a_outColor, uint32_t a_width, uint32_t a_height, uint32_t a_passNumber);
+  virtual void CalcAOBlock(uint32_t* a_outColor, uint32_t a_size, uint32_t a_passNumber);
 
-  void CastSingleAORay(uint32_t tidX, uint32_t tidY, uint32_t tidZ, float* ao_tex, int a_passNumber);
-  void kernel_TraceAORay(uint32_t tidX, uint32_t tidY, int32_t tidZ, const float4* positions, float* out_visibility);
+  void CastSingleAORay  (uint32_t tidX, uint32_t tidZ, float* ao_tex, int a_passNumber);
+  void kernel_TraceAORay(uint32_t tidX, uint32_t tidZ, const float4* positions, float* out_visibility);
 
   static constexpr uint32_t AO_PASS_COUNT = 1;
   static constexpr uint32_t AO_TILE_SIZE  = 128;
@@ -125,9 +129,10 @@ protected:
   LiteMath::float4x4 m_projInv;
   LiteMath::float4x4 m_worldViewInv;
   std::vector<LiteMath::float4x4> m_normMatrices; ///< per instance normal matrix, local to world
+  std::vector<uint32_t>           m_packedXY;
 
-  std::shared_ptr<ISceneObject> m_pAccelStruct;
-
+  std::shared_ptr<ISceneObject>   m_pAccelStruct;
+  
   std::vector<uint32_t>        m_matIdOffsets;  ///< offset = m_matIdOffsets[geomId]
   std::vector<uint32_t>        m_matIdByPrimId; ///< matId  = m_matIdByPrimId[offset + primId]
   std::vector<uint32_t>        m_triIndices;    ///< (A,B,C) = m_triIndices[(offset + primId)*3 + 0/1/2]
