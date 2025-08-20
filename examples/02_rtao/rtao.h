@@ -102,6 +102,12 @@ protected:
   bool LoadSceneGLTF(const std::string& a_path);
 #endif
 
+  inline uint  RTVPersistent_ThreadId(uint a_tid)     const { return a_tid; }
+  inline void  RTVPersistent_SetIter(uint a_pid)      const {               }
+  inline uint  RTVPersistent_Iters()                  const { return 1;     }
+  inline bool  RTVPersistent_IsFirst()                const { return true;  }
+  inline float RTVPersistent_ReduceAdd1f(float color) const { return color; }
+
   uint32_t m_width;
   uint32_t m_height;
   float    m_aoMaxRadius = 2.0f;
