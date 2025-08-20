@@ -1,0 +1,27 @@
+{
+  "mainClass"     : "RTAO",
+  "baseClasses"   : [],
+  "composClasses" : [{"interface" : "ISceneObject", 
+                      "implementation": "BVH2CommonLoftRT"}],
+  "baseDirectory"  : "..",
+  "source"         : ["examples/02_rtao/rtao.cpp", "core/BVH2CommonLoftRT.cpp"],
+  "includeProcess" : [".", "examples", "core", "core/builders"],
+  "includeIgnore"  : ["external", "core/common"],
+  "options" : {
+    "-pattern"    : "rtv",
+    "-megakernel" : "1",
+    "-shaderCC"   : "slang",
+    "-shaderFolderPrefix" : "examples/02_rtao/",
+    "-timestamps"   : "0",
+    "-suffix" : "_GPU_CS",
+    "-const_ubo"  : 1
+  },
+  "kernels" : {
+        "all"        : {"nonConstantData": {"a_outColor" : 1}},
+        "PackXYMega" : {"nonConstantData": {"m_packedXY" : 1}}
+  },
+  "defines" : {
+    "ENABLE_SPHERES" : ""
+  },
+  "end" : ""
+}

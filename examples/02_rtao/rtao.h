@@ -75,7 +75,7 @@ protected:
 
   void PackXY(uint tidX, uint tidY);
   void kernel_PackXY(uint tidX, uint tidY, uint* out_pakedXY);
-  void PackXYBlock(uint tidX, uint tidY, uint a_passNum);
+  virtual void PackXYBlock(uint tidX, uint tidY, uint a_passNum);
 
   void SetAORadius(float radius);
   void kernel_AO2Color(uint32_t tidX, const LiteMath::float4* positions, const float* visibility, uint32_t* out_color);

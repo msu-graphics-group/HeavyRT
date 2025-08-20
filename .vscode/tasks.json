@@ -39,4 +39,14 @@
             ]
         },
 
+        {
+            "label": "BuildShaders: rtao_cs_slang",
+            "type": "shell",
+            "command": "cd examples/02_rtao/shaders_gpu_cs && bash build_slang.sh",
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+
     ]

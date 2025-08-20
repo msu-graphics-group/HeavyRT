@@ -13,7 +13,7 @@ static inline float attenuationFunc(float r, float R) {
 
 static inline uint32_t float4ToRGBA(LiteMath::float4 v)
 {
-  LiteMath::int4 intV = LiteMath::int4(clamp(v, 0, 1)*255);
+  int4 intV = int4(clamp(v, 0, 1)*255);
   uint32_t rgba = intV.x + (intV.y<<8) + (intV.z<<16) + (intV.w<<24);
   return rgba;
 }
@@ -78,7 +78,6 @@ void RTAO::CalcAO(uint32_t* a_outColor, uint32_t tidX)
 
   kernel_TraceEyeRay2(tidX, &hitPosNorm, &visibility); // ==> (hitPos,hitNorm,visibility)
   
-
   for(uint32_t tidZ = 0; tidZ < m_aoRaysCount; tidZ++) { // RTVPersistent_Iters()
     //RTVPersistent_SetIter(tidZ % RTVPersistent_Iters());
     kernel_TraceAORay(tidX, tidZ, &hitPosNorm, &visibility); // ==> visibility
@@ -101,9 +100,10 @@ void RTAO::kernel_AO2Color(uint32_t tidX, const float4* positions, const float* 
     visLocal = RTVPersistent_ReduceAdd1f(visLocal);
     if(RTVPersistent_IsFirst())
     {
-      const float sampleCount = float(AO_PASS_COUNT * m_aoRaysCount);
-      const float normCoeff   = 1.0f / sampleCount;
-      const float resAO       = std::pow(visLocal * normCoeff, m_power);
+      const float sampleCount  = float(AO_PASS_COUNT * m_aoRaysCount);
+      const float normCoeff    = 1.0f / sampleCount;
+      const float power        = m_power;
+      const float resAO        = std::pow(visLocal * normCoeff, power);
       out_color[y*m_width + x] = floatToGrayRGBA(resAO);
     }
   }

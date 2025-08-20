@@ -129,7 +129,11 @@ if(USE_VULKAN)
       
       ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq.cpp
       ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq_init.cpp
-      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq_ds.cpp )
+      ${CMAKE_SOURCE_DIR}/examples/01_eye_rays/eye_ray_gpu_rq_ds.cpp 
+      
+      ${CMAKE_SOURCE_DIR}/examples/02_rtao/rtao_gpu_cs.cpp
+      ${CMAKE_SOURCE_DIR}/examples/02_rtao/rtao_gpu_cs_init.cpp
+      ${CMAKE_SOURCE_DIR}/examples/02_rtao/rtao_gpu_cs_ds.cpp )
 endif()
 
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
