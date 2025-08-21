@@ -71,10 +71,10 @@ int main(int argc, const char** argv)
 
   RenderPreset presets {};
   presets.isAORadiusInMeters = false;
-  presets.aoRaysNum       = 16;
-  presets.aoRayLength     = 0.1f; //
-  presets.measureOverhead = false;
-  presets.numBounces      = 3;
+  presets.aoRaysNum          = 32;
+  presets.aoRayLength        = 0.1f; //
+  presets.measureOverhead    = false;
+  presets.numBounces         = 3;
 
   //you may overrride some input parameters
   if(argc > 2)

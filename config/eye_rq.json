@@ -11,6 +11,7 @@
   "source"         : ["examples/01_eye_rays/eye_ray.cpp", "core/BVH2CommonLoftRT.cpp"],
   "includeProcess" : [".", "examples", "core", "core/builders"],
   "includeIgnore"  : ["external", "core/common"],
+  "additionaIncludes" : ["BVH2CommonLoftRT.h"],
   "options" : {
     "-pattern"    : "rtv",
     "-megakernel" : "1",

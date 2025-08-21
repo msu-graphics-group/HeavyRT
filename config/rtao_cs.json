@@ -7,6 +7,7 @@
   "source"         : ["examples/02_rtao/rtao.cpp", "core/BVH2CommonLoftRT.cpp"],
   "includeProcess" : [".", "examples", "core", "core/builders"],
   "includeIgnore"  : ["external", "core/common"],
+  "additionaIncludes" : ["BVH2CommonLoftRT.h"],
   "options" : {
     "-pattern"    : "rtv",
     "-megakernel" : "1",
@@ -14,7 +15,8 @@
     "-shaderFolderPrefix" : "examples/02_rtao/",
     "-timestamps"   : "0",
     "-suffix" : "_GPU_CS",
-    "-const_ubo"  : 1
+    "-const_ubo"  : 1,
+    "-persistent" : 0
   },
   "kernels" : {
         "all"        : {"nonConstantData": {"a_outColor" : 1}},

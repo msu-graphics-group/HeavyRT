@@ -73,22 +73,24 @@ void RTAO::CalcAOBlock(uint32_t* a_outColor, uint32_t a_size, uint32_t a_passNum
 
 void RTAO::CalcAO(uint32_t* a_outColor, uint32_t tidX)
 {
+ 
   float4 hitPosNorm;
   float  visibility;
-
-  kernel_TraceEyeRay2(tidX, &hitPosNorm, &visibility); // ==> (hitPos,hitNorm,visibility)
   
-  for(uint32_t tidZ = 0; tidZ < m_aoRaysCount; tidZ++) { // RTVPersistent_Iters()
-    //RTVPersistent_SetIter(tidZ % RTVPersistent_Iters());
+  RTVPersistent_SetIter(0);
+  kernel_TraceEyeRay2(tidX, &hitPosNorm, &visibility); // ==> (hitPos,hitNorm,visibility)
+    
+  for(uint32_t tidZ = 0; tidZ < m_aoRaysCount / RTVPersistent_Iters(); tidZ++) { // RTVPersistent_Iters()
+    RTVPersistent_SetIter(tidZ % RTVPersistent_Iters());
     kernel_TraceAORay(tidX, tidZ, &hitPosNorm, &visibility); // ==> visibility
   }
-
+  
   kernel_AO2Color(tidX, &hitPosNorm, &visibility, a_outColor); // ==> a_outColor
 }
 
 void RTAO::kernel_AO2Color(uint32_t tidX, const float4* positions, const float* visibility, uint32_t* out_color)
 {
-  const uint XY = m_packedXY[tidX];
+  const uint XY = m_packedXY[RTVPersistent_ThreadId(tidX)];
   const uint x  = (XY & 0x0000FFFF);
   const uint y  = (XY & 0xFFFF0000) >> 16;
 
@@ -96,16 +98,12 @@ void RTAO::kernel_AO2Color(uint32_t tidX, const float4* positions, const float* 
     out_color[y*m_width + x] = 0;
   else
   {
-    float visLocal = (*visibility);
-    visLocal = RTVPersistent_ReduceAdd1f(visLocal);
-    if(RTVPersistent_IsFirst())
-    {
-      const float sampleCount  = float(AO_PASS_COUNT * m_aoRaysCount);
-      const float normCoeff    = 1.0f / sampleCount;
-      const float power        = m_power;
-      const float resAO        = std::pow(visLocal * normCoeff, power);
-      out_color[y*m_width + x] = floatToGrayRGBA(resAO);
-    }
+    const float visLocal     = (*visibility);
+    const float sampleCount  = float(AO_PASS_COUNT * m_aoRaysCount);
+    const float normCoeff    = 1.0f / sampleCount;
+    const float power        = m_power;
+    const float resAO        = std::pow(visLocal * normCoeff, power);
+    out_color[y*m_width + x] = floatToGrayRGBA(resAO);
   }
 }
 
@@ -116,7 +114,7 @@ static float3 calcTriangleNormal(const float3 *A_pos, const float3 *B_pos, const
 
 void RTAO::kernel_TraceEyeRay2(uint32_t tidX, float4* positions, float* visibility)
 {
-  const uint XY = m_packedXY[tidX];
+  const uint XY = m_packedXY[RTVPersistent_ThreadId(tidX)];
   const uint x  = (XY & 0x0000FFFF);
   const uint y  = (XY & 0xFFFF0000) >> 16;
 
@@ -199,7 +197,7 @@ void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t tidZ, const float4* positio
 
   const float3 normal = decodeNormal(as_uint(rayPos1.w)); // to_float3(*normals);
   
-  const uint XY = m_packedXY[tidX];
+  const uint XY = m_packedXY[RTVPersistent_ThreadId(tidX)];
   const uint x  = (XY & 0x0000FFFF);
   const uint y  = (XY & 0xFFFF0000) >> 16;
 
@@ -230,5 +228,5 @@ void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t tidZ, const float4* positio
   if(hit)
     *out_visibility = *out_visibility + 1.0f;
   #endif
-  
+  *out_visibility = RTVPersistent_ReduceAdd1f(*out_visibility);
 }

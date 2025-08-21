@@ -11,6 +11,7 @@
   "source"         : ["examples/02_rtao/rtao.cpp", "core/BVH2CommonLoftRT.cpp"],
   "includeProcess" : [".", "examples", "core", "core/builders"],
   "includeIgnore"  : ["external", "core/common"],
+  "additionaIncludes" : ["BVH2CommonLoftRT.h"],
   "options" : {
     "-pattern"    : "rtv",
     "-megakernel" : "1",
