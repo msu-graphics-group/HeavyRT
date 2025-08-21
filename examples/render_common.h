@@ -111,26 +111,51 @@ static inline float3 OffsRayPos(const float3 a_hitPos, const float3 a_surfaceNor
   return a_hitPos + signOfNormal2 * offsetEps * a_surfaceNorm;
 }
 
-static inline uint encodeNormal(float3 n)
+//static inline uint encodeNormal(float3 n)
+//{
+//  const int x = (int)(n.x*32767.0f);
+//  const int y = (int)(n.y*32767.0f);
+//
+//  const uint sign = (n.z >= 0) ? 0 : 1;
+//  const uint sx   = (uint(x & 0xfffe) | sign);
+//  const uint sy   = (uint(y & 0xffff) << 16);
+//
+//  return (sx | sy);
+//}
+//
+//static inline float3 decodeNormal(uint a_data)
+//{  
+//  const uint a_enc_x = (a_data  & 0x0000FFFF);
+//  const uint a_enc_y = ((a_data & 0xFFFF0000) >> 16);
+//  const float sign   = ((a_enc_x & 0x0001) != 0) ? -1.0f : 1.0f;
+//
+//  const float x = ((uint16_t)(a_enc_x & 0xfffe))*(1.0f / 32767.0f);
+//  const float y = ((uint16_t)(a_enc_y & 0xffff))*(1.0f / 32767.0f);
+//  const float z = sign*std::sqrt(std::max(1.0f - x*x - y*y, 0.0f));
+//
+//  return float3(x, y, z);
+//}
+
+static inline unsigned int encodeNormal(float3 n)
 {
   const int x = (int)(n.x*32767.0f);
   const int y = (int)(n.y*32767.0f);
 
-  const uint sign = (n.z >= 0) ? 0 : 1;
-  const uint sx   = (uint(x & 0xfffe) | sign);
-  const uint sy   = (uint(y & 0xffff) << 16);
+  const unsigned int sign = (n.z >= 0) ? 0 : 1;
+  const unsigned int sx   = ((unsigned int)(x & 0xfffe) | sign);
+  const unsigned int sy   = ((unsigned int)(y & 0xffff) << 16);
 
   return (sx | sy);
 }
 
-static inline float3 decodeNormal(uint a_data)
+static inline float3 decodeNormal(unsigned int a_data)
 {  
-  const uint a_enc_x = (a_data  & 0x0000FFFF);
-  const uint a_enc_y = ((a_data & 0xFFFF0000) >> 16);
-  const float sign   = ((a_enc_x & 0x0001) != 0) ? -1.0f : 1.0f;
+  const unsigned int a_enc_x = (a_data  & 0x0000FFFF);
+  const unsigned int a_enc_y = ((a_data & 0xFFFF0000) >> 16);
+  const float sign           = ((a_enc_x & 0x0001) != 0) ? -1.0f : 1.0f;
 
-  const float x = ((uint16_t)(a_enc_x & 0xfffe))*(1.0f / 32767.0f);
-  const float y = ((uint16_t)(a_enc_y & 0xffff))*(1.0f / 32767.0f);
+  const float x = ((short)(a_enc_x & 0xfffe))*(1.0f / 32767.0f);
+  const float y = ((short)(a_enc_y & 0xffff))*(1.0f / 32767.0f);
   const float z = sign*std::sqrt(std::max(1.0f - x*x - y*y, 0.0f));
 
   return float3(x, y, z);
