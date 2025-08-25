@@ -216,17 +216,17 @@ void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t tidZ, const float4* positio
   if (rayPos.y>=AO_HIT_BACK)
     return;
   
+  float visibility = 1.0f;
+
   #ifdef RTAO_USE_CLOSEST_HIT
   CRT_Hit hit = m_pAccelStruct->RayQuery_NearestHit(rayPos, rayDir);
-  float visibility = 1.0f;
-  if (hit.geomId != uint32_t(-1)) {
+  if (hit.geomId != uint32_t(-1))
     visibility = attenuationFunc(hit.t, m_aoMaxRadius);
-  }
-  visibility = RTVPersistent_ReduceAdd1f(visibility);
-  *out_visibility = *out_visibility + visibility;
   #else
-  bool hit = m_pAccelStruct->RayQuery_AnyHit(rayPos, rayDir);
-  if(hit)
-    *out_visibility = *out_visibility + 1.0f;
+  bool hit   = m_pAccelStruct->RayQuery_AnyHit(rayPos, rayDir);
+  visibility = hit ? 1.0f : 0.0f;
   #endif
+
+  visibility       = RTVPersistent_ReduceAdd1f(visibility);
+  *out_visibility += visibility;
 }
