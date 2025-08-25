@@ -73,19 +73,19 @@ void RTAO::CalcAOBlock(uint32_t* a_outColor, uint32_t a_size, uint32_t a_passNum
 
 void RTAO::CalcAO(uint32_t* a_outColor, uint32_t tidX)
 {
- 
-  float4 hitPosNorm;
-  float  visibility;
-  
-  RTVPersistent_SetIter(0);
-  kernel_TraceEyeRay2(tidX, &hitPosNorm, &visibility); // ==> (hitPos,hitNorm,visibility)
+  for (uint pixId = 0; pixId < RTVPersistent_Iters(); pixId++)
+  {
+    RTVPersistent_SetIter(pixId);
+
+    float4 hitPosNorm;
+    float  visibility;
+    kernel_TraceEyeRay2(tidX, &hitPosNorm, &visibility); // ==> (hitPos,hitNorm,visibility)
     
-  for(uint32_t tidZ = 0; tidZ < m_aoRaysCount / RTVPersistent_Iters(); tidZ++) { // RTVPersistent_Iters()
-    RTVPersistent_SetIter(tidZ % RTVPersistent_Iters());
-    kernel_TraceAORay(tidX, tidZ, &hitPosNorm, &visibility); // ==> visibility
+    for (uint32_t tidZ = 0; tidZ < (m_aoRaysCount / RTVPersistent_Iters()); tidZ++)
+      kernel_TraceAORay(tidX, tidZ*RTVPersistent_Iters() + tidX % RTVPersistent_Iters(), &hitPosNorm, &visibility); // ==> visibility
+    
+    kernel_AO2Color(tidX, &hitPosNorm, &visibility, a_outColor); // ==> a_outColor
   }
-  
-  kernel_AO2Color(tidX, &hitPosNorm, &visibility, a_outColor); // ==> a_outColor
 }
 
 void RTAO::kernel_AO2Color(uint32_t tidX, const float4* positions, const float* visibility, uint32_t* out_color)
@@ -222,11 +222,11 @@ void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t tidZ, const float4* positio
   if (hit.geomId != uint32_t(-1)) {
     visibility = attenuationFunc(hit.t, m_aoMaxRadius);
   }
+  visibility = RTVPersistent_ReduceAdd1f(visibility);
   *out_visibility = *out_visibility + visibility;
   #else
   bool hit = m_pAccelStruct->RayQuery_AnyHit(rayPos, rayDir);
   if(hit)
     *out_visibility = *out_visibility + 1.0f;
   #endif
-  *out_visibility = RTVPersistent_ReduceAdd1f(*out_visibility);
 }

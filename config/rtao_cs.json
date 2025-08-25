@@ -16,7 +16,7 @@
     "-timestamps"   : "0",
     "-suffix" : "_GPU_CS",
     "-const_ubo"  : 1,
-    "-persistent" : 0
+    "-persistent" : 1
   },
   "kernels" : {
         "all"        : {"nonConstantData": {"a_outColor" : 1}},

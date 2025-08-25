@@ -71,7 +71,7 @@ int main(int argc, const char** argv)
 
   RenderPreset presets {};
   presets.isAORadiusInMeters = false;
-  presets.aoRaysNum          = 32;
+  presets.aoRaysNum          = 256;
   presets.aoRayLength        = 0.1f; //
   presets.measureOverhead    = false;
   presets.numBounces         = 3;
