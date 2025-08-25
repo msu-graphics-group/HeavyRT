@@ -15,6 +15,7 @@ struct RenderPreset
   int   aoRaysNum;
   int   numBounces;
   bool  measureOverhead;
+  bool  drawNormals;
 };
 
 #ifndef KERNEL_SLICER

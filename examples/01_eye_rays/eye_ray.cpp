@@ -45,8 +45,8 @@ void EyeRayCaster::kernel_InitEyeRay(uint32_t tidX, float4* rayPosAndNear, float
   *rayDirAndFar  = to_float4(rayDir, MAXFLOAT);
 }
 
-void EyeRayCaster::kernel_RayTrace(uint32_t tidX, const float4* rayPosAndNear,
-                                   const float4* rayDirAndFar, uint32_t* out_color)
+void EyeRayCaster::kernel_RayTrace(uint32_t tidX, const float4* rayPosAndNear, const float4* rayDirAndFar, 
+                                   uint32_t* out_color)
 {
   const float4 rayPos = *rayPosAndNear;
   const float4 rayDir = *rayDirAndFar ;
@@ -57,8 +57,20 @@ void EyeRayCaster::kernel_RayTrace(uint32_t tidX, const float4* rayPosAndNear,
     const uint XY = m_packedXY[tidX];
     const uint x  = (XY & 0x0000FFFF);
     const uint y  = (XY & 0xFFFF0000) >> 16;
-    const auto colorId = (hit.primId) % palette_size;
-    out_color[y * m_width + x] = (hit.primId == 0xFFFFFFFF) ? 0 : m_palette[colorId];
+    
+    if(m_drawNormalsMode != 0 && hit.primId != 0xFFFFFFFF)
+    {
+      float3 normal = decode_normal(float2(hit.coords[0], hit.coords[1]));
+      normal.x = abs(normal.x);
+      normal.y = abs(normal.y);
+      normal.z = abs(normal.z);
+      out_color[y * m_width + x] = RealColorToUint32(to_float4(normal,1));
+    }
+    else
+    {
+      const auto colorId         = hit.primId % palette_size;
+      out_color[y * m_width + x] = (hit.primId == 0xFFFFFFFF) ? 0 : m_palette[colorId];
+    }
   }
   else
   {
@@ -113,4 +125,9 @@ void EyeRayCaster::SetPresets(const RenderPreset& a_presets)
     m_measureOverhead = 1;
   else
     m_measureOverhead = 0;
+
+  if(a_presets.drawNormals)
+    m_drawNormalsMode = 1;
+  else
+    m_drawNormalsMode = 0;
 }

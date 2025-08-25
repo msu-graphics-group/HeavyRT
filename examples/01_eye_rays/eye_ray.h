@@ -97,6 +97,7 @@ protected:
   uint32_t m_width;
   uint32_t m_height;
   uint32_t m_measureOverhead = 0;
+  uint32_t m_drawNormalsMode = 0;
 
   int m_gltfCamId = -1;
   LiteMath::float4x4 m_projInv;

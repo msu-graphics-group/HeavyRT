@@ -77,6 +77,7 @@ int main(int argc, const char** argv)
   presets.aoRaysNum          = 256;
   presets.aoRayLength        = 0.1f; //
   presets.measureOverhead    = false;
+  presets.drawNormals        = false;
   presets.numBounces         = 3;
 
   //you may overrride some input parameters
@@ -127,6 +128,8 @@ int main(int argc, const char** argv)
         testDynamic = (std::atoi(argv[i+1]) != 0);
       else if(currArg == "-frames" && i+1 < argc)
         NFrames = std::atoi(argv[i+1]);
+      else if(currArg == "-normals" && i+1 < argc || currArg == "-draw_normals" && i+1 < argc)
+        presets.drawNormals = (std::atoi(argv[i+1]) != 0);
     }
   }
 
