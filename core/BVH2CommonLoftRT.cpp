@@ -178,19 +178,11 @@ uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, fl
     
     if(tHit > rayPosAndNear.w && tHit < pHit->t)
     {
-      // Compute surface normal of element at ray intersection point
-      float3 norm = normalize(o + to_float3(rayDirAndFar)*tHit);
-             norm = myfaceforward(norm, -1.0f*to_float3(rayDirAndFar));
-
-      float2 normEncoded = encode_normal(norm);
-
       pHit->t         = tHit;
       pHit->primId    = info.instId;
       pHit->instId    = info.instId;
       pHit->geomId    = info.geomId | (GEOM_TYPE_SPHERE << GEOM_ID_BITS);
-      pHit->coords[0] = normEncoded.x;
-      pHit->coords[1] = normEncoded.y;
-
+    
       hitTag = GEOM_TYPE_SPHERE;
     }
   }
@@ -206,16 +198,41 @@ uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, fl
       pHit->instId    = info.instId;
       pHit->geomId    = info.geomId | (GEOM_TYPE_MANDELBULB << GEOM_ID_BITS);
 
-      pHit->coords[0] = 0.0f; // TODO: istimate it
-      pHit->coords[1] = 0.0f;
-      pHit->coords[2] = 0.0f;
-
       hitTag = GEOM_TYPE_MANDELBULB;
     }
   }
   #endif
   return hitTag;
 }      
+
+void BVH2CommonLoftRT::IntersectionComplete(float4 rayPosAndNear, float4 rayDirAndFar, CRT_Hit *pHit)
+{
+  if(pHit->instId != uint32_t(-1) && pHit->geomId != uint32_t(-1))
+  {
+    const uint32_t geomIdType = m_geomIdByInstId[pHit->instId];
+    const uint32_t geomId     = (geomIdType & GEOM_ID_MASK);
+    const uint32_t geomType   = (geomIdType & GEOM_TP_MASK) >> GEOM_ID_SHFT;
+  
+    const float3 ray_pos = matmul4x3(m_instMatricesInv[pHit->instId], to_float3(rayPosAndNear));
+    const float3 ray_dir = matmul3x3(m_instMatricesInv[pHit->instId], to_float3(rayDirAndFar));
+
+    if(geomType == GEOM_TYPE_TRIANGLE) // remap primitive id only for triangles
+    {
+      const uint2 geomOffsets = m_geomOffsets[pHit->geomId];
+      pHit->primId = m_primIndices[geomOffsets.x/3 + pHit->primId];
+    }
+    else if(geomType == GEOM_TYPE_SPHERE)
+    {
+      // Compute surface normal of element at ray intersection point
+      float3 norm = normalize(ray_pos + ray_dir*pHit->t);
+             norm = myfaceforward(norm, -1.0f*to_float3(rayDirAndFar));
+       
+      float2 normEncoded = encode_normal(norm);
+      pHit->coords[0] = normEncoded.x;
+      pHit->coords[1] = normEncoded.y;
+    }
+  }
+}
 
 //extern bool g_debugPrint;
 
@@ -380,18 +397,7 @@ CRT_Hit BVH2CommonLoftRT::RayQuery_NearestHit(float4 posAndNear, float4 dirAndFa
     
   } // end while (top >= 0)
   
-  if(hit.instId != uint32_t(-1) && hit.geomId != uint32_t(-1))
-  {
-    const uint32_t geomIdType = m_geomIdByInstId[hit.instId];
-    const uint32_t geomId     = (geomIdType & GEOM_ID_MASK);
-    const uint32_t geomType   = (geomIdType & GEOM_TP_MASK) >> GEOM_ID_SHFT;
-  
-    if(geomType == GEOM_TYPE_TRIANGLE) // remap primitive id only for triangles
-    {
-      const uint2 geomOffsets = m_geomOffsets[hit.geomId];
-      hit.primId = m_primIndices[geomOffsets.x/3 + hit.primId];
-    }
-  }
+  IntersectionComplete(posAndNear, dirAndFar, &hit);
 
   return hit;
 }

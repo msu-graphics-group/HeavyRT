@@ -4,8 +4,9 @@
   "composClasses" : [{"interface" : "ISceneObject", 
                       "implementation": "BVH2CommonLoftRT",
                       "intersection": {
-                        "shader" : "IntersectAllPrimitivesInLeaf",
-                        "accel"  : "m_pAccelStruct"
+                        "shader"   : "IntersectAllPrimitivesInLeaf",
+                        "complete" : "IntersectionComplete",
+                        "accel"    : "m_pAccelStruct"
                       }}],
   "baseDirectory"  : "..",
   "source"         : ["examples/01_eye_rays/eye_ray.cpp", "core/BVH2CommonLoftRT.cpp"],

@@ -84,6 +84,9 @@ set(BUILDERS_SRC
 set(VULKAN_SRC "")
 set(VULKAN_EXTERNAL_SRC "")
 
+add_compile_definitions(ENABLE_SPHERES)    # enable spheres    prims
+add_compile_definitions(ENABLE_MANDELBULB) # enable mundelbulb prims
+
 if(USE_VULKAN)
   set(EXTERNAL "${CMAKE_SOURCE_DIR}/.." CACHE PATH "external source directory")
 

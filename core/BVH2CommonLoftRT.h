@@ -25,9 +25,6 @@ using LiteMath::Box4f;
 #include "builders/cbvh.h"
 using cbvh2::BVHNode;
 
-#define ENABLE_SPHERES
-#define ENABLE_MANDELBULB
-
 struct BVH2CommonLoftRT : public ISceneObject
 {
   BVH2CommonLoftRT(const char* a_builderName = "cbvh_embree2") : m_builderName(a_builderName) {}
@@ -72,7 +69,8 @@ struct BVH2CommonLoftRT : public ISceneObject
   static constexpr unsigned int GEOM_TYPE_SPHERE     = 1;
   static constexpr unsigned int GEOM_TYPE_MANDELBULB = 2; 
 
-  uint32_t IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4 rayDirAndFar, CRT_LeafInfo info, CRT_Hit *pHit);                               
+  uint32_t IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, float4 rayDirAndFar, CRT_LeafInfo info, CRT_Hit *pHit);  
+  void     IntersectionComplete(float4 rayPosAndNear, float4 rayDirAndFar, CRT_Hit *pHit);                             
 
   virtual size_t AppendTreeData(const std::vector<BVHNode>& a_nodes, const std::vector<uint32_t>& a_indices, 
                                 const uint32_t *a_triIndices, size_t a_indNumber);

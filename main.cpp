@@ -68,6 +68,9 @@ int main(int argc, const char** argv)
   #ifdef ENABLE_METRICS
   NUM_LAUNCHES = 1;
   #endif
+  if(!onGPU)
+    NUM_LAUNCHES = 1;
+
 
   RenderPreset presets {};
   presets.isAORadiusInMeters = false;
