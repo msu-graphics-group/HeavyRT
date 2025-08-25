@@ -55,7 +55,7 @@ static inline float3 myfaceforward(const float3 n, const float3 v) { return (dot
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-float mandelbulb_sdf(float3 pos) 
+static inline float mandelbulb_sdf(float3 pos) 
 {
   const float mandelbulb_power    = 8.0f;
   const int   mandelbulb_iter_num = 16;
@@ -86,7 +86,7 @@ float mandelbulb_sdf(float3 pos)
 	return 0.5f*log(r)*r/dr;
 }
 
-float ray_marching_sdf(const float3 ray_pos, const float3 ray_dir)
+static inline float ray_marching_sdf(const float3 ray_pos, const float3 ray_dir)
 {
   const float epsilon = 0.0002f;
   const float2 boxHit = RayBoxIntersection2(ray_pos, SafeInverse(ray_dir), float3(-1,-1,-1), float3(+1,+1,+1));
@@ -106,6 +106,22 @@ float ray_marching_sdf(const float3 ray_pos, const float3 ray_dir)
     depth = -1.0f;
    
 	return depth;
+}
+
+static inline float3 estimate_normal(float3 z, float eps)
+{
+  const float3 z1 = z + float3(eps, 0, 0);
+  const float3 z2 = z - float3(eps, 0, 0);
+  const float3 z3 = z + float3(0, eps, 0);
+  const float3 z4 = z - float3(0, eps, 0);
+  const float3 z5 = z + float3(0, 0, eps);
+  const float3 z6 = z - float3(0, 0, eps);
+
+  const float dx = mandelbulb_sdf(z1) - mandelbulb_sdf(z2);
+  const float dy = mandelbulb_sdf(z3) - mandelbulb_sdf(z4);
+  const float dz = mandelbulb_sdf(z5) - mandelbulb_sdf(z6);
+ 
+  return normalize(float3(dx, dy, dz) / (2.0f*eps));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -221,6 +237,7 @@ void BVH2CommonLoftRT::IntersectionComplete(float4 rayPosAndNear, float4 rayDirA
       const uint2 geomOffsets = m_geomOffsets[pHit->geomId];
       pHit->primId = m_primIndices[geomOffsets.x/3 + pHit->primId];
     }
+    #ifdef ENABLE_SPHERES
     else if(geomType == GEOM_TYPE_SPHERE)
     {
       // Compute surface normal of element at ray intersection point
@@ -231,6 +248,18 @@ void BVH2CommonLoftRT::IntersectionComplete(float4 rayPosAndNear, float4 rayDirA
       pHit->coords[0] = normEncoded.x;
       pHit->coords[1] = normEncoded.y;
     }
+    #endif
+    #ifdef ENABLE_MANDELBULB
+    else if(geomType == GEOM_TYPE_MANDELBULB)
+    {
+      float3 norm = estimate_normal(ray_pos + ray_dir*pHit->t, 1e-4f);
+             norm = myfaceforward(norm, -1.0f*to_float3(rayDirAndFar));
+
+      float2 normEncoded = encode_normal(norm);
+      pHit->coords[0] = normEncoded.x;
+      pHit->coords[1] = normEncoded.y;
+    }
+    #endif
   }
 }
 

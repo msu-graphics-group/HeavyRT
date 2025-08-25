@@ -203,7 +203,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/render_app",
             "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/a_cornell_bunny/mandelbulb_in_cornell.xml", //"-width", "512", "-height", "512",
-                        "-accel", "BVH2_LOFT", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y02_mandelbulb_cpu.bmp", "-gpu", "0"], 
+                        "-accel", "BVH2_LOFT", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y02_mandelbulb_cpu.bmp", "-gpu", "0", "-normals", "1"], 
             "stopAtEntry": false,
             "cwd"    : "${workspaceFolder}",
             "environment": [],
