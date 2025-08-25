@@ -22,7 +22,8 @@
         "PackXYMega" : {"nonConstantData": {"m_packedXY" : 1}}
   },
   "defines" : {
-    "ENABLE_SPHERES" : ""
+    "ENABLE_SPHERES" : "",
+    "ENABLE_MANDELBULB" : ""
   },
   "end" : ""
 }
