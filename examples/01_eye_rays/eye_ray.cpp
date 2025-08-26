@@ -53,12 +53,14 @@ void EyeRayCaster::kernel_RayTrace(uint32_t tidX, const float4* rayPosAndNear, c
   
   if(m_measureOverhead == 0)
   {
-    CRT_Hit hit   = m_pAccelStruct->RayQuery_NearestHit(rayPos, rayDir);
+    const CRT_Hit hit    = m_pAccelStruct->RayQuery_NearestHit(rayPos, rayDir);
+    const uint32_t gType = (hit.geomId & 0xff000000) >> 24;
+
     const uint XY = m_packedXY[tidX];
     const uint x  = (XY & 0x0000FFFF);
     const uint y  = (XY & 0xFFFF0000) >> 16;
     
-    if(m_drawNormalsMode != 0 && hit.primId != 0xFFFFFFFF)
+    if(hit.primId != 0xFFFFFFFF && gType != 0) // m_drawNormalsMode != 0 && gType != 0
     {
       float3 normal = decode_normal(float2(hit.coords[0], hit.coords[1]));
       normal.x = abs(normal.x);

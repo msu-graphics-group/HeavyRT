@@ -238,5 +238,26 @@
                 }
             ]
         },
+
+         {
+            "name"   : "MandelbulbAOCornell(GPU)",
+            "type"   : "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/render_app",
+            "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/a_cornell_bunny/mandelbulb_in_cornell.xml", //"-width", "512", "-height", "512",
+                        "-render", "RTAO", "-accel", "BVH2_LOFT", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y03_mandelbulb_ao_gpu.bmp", "-gpu", "1"], 
+            "stopAtEntry": false,
+            "cwd"    : "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
     ]
 }
