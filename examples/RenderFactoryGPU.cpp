@@ -7,14 +7,17 @@
 
 #include "vk_context.h"
 
-std::shared_ptr<EyeRayCaster> CreateEyeRayCaster_GPU_SW(vk_utils::VulkanContext a_ctx, size_t a_maxThreadsGenerated);
-vk_utils::VulkanDeviceFeatures EyeRayCaster_GPU_SW_ListRequiredDeviceFeatures();
+std::shared_ptr<EyeRayCaster> CreateEyeRayCaster_GPU_CS(vk_utils::VulkanContext a_ctx, size_t a_maxThreadsGenerated);
+vk_utils::VulkanDeviceFeatures EyeRayCaster_GPU_CS_ListRequiredDeviceFeatures();
 
 std::shared_ptr<EyeRayCaster> CreateEyeRayCaster_GPU_RQ(vk_utils::VulkanContext a_ctx, size_t a_maxThreadsGenerated);
 vk_utils::VulkanDeviceFeatures EyeRayCaster_GPU_RQ_ListRequiredDeviceFeatures();
 
 std::shared_ptr<RTAO> CreateRTAO_GPU_CS(vk_utils::VulkanContext a_ctx, size_t a_maxThreadsGenerated);
 vk_utils::VulkanDeviceFeatures RTAO_GPU_CS_ListRequiredDeviceFeatures();
+
+std::shared_ptr<RTAO>          CreateRTAO_GPU_RQ(vk_utils::VulkanContext a_ctx, size_t a_maxThreadsGenerated);
+vk_utils::VulkanDeviceFeatures RTAO_GPU_RQ_ListRequiredDeviceFeatures();
 
 vk_utils::VulkanDeviceFeatures GetRenderGPUFeatures(const char* a_renderName, const char* a_accelStruct)
 {
@@ -23,14 +26,17 @@ vk_utils::VulkanDeviceFeatures GetRenderGPUFeatures(const char* a_renderName, co
   
   if(renderName == "RTAO" || renderName == "AO")
   {
-    return RTAO_GPU_CS_ListRequiredDeviceFeatures();
+    if(accelStruct == "RTX" || accelStruct == "HW")
+      return RTAO_GPU_RQ_ListRequiredDeviceFeatures();
+    else
+      return RTAO_GPU_CS_ListRequiredDeviceFeatures();
   }
   else
   {
     if(accelStruct == "RTX" || accelStruct == "HW")
       return EyeRayCaster_GPU_RQ_ListRequiredDeviceFeatures();
     else
-      return EyeRayCaster_GPU_SW_ListRequiredDeviceFeatures();
+      return EyeRayCaster_GPU_CS_ListRequiredDeviceFeatures();
   }
 } 
 
@@ -42,14 +48,17 @@ std::shared_ptr<IRenderer> CreateRenderGPU(const char* a_renderName, const char*
   
   if(renderName == "RTAO" || renderName == "AO")
   {
-    return CreateRTAO_GPU_CS(a_ctx, a_maxThreadsGenerated);
+    if(accelStruct == "RTX" || accelStruct == "HW")
+      return CreateRTAO_GPU_RQ(a_ctx, a_maxThreadsGenerated);
+    else
+      return CreateRTAO_GPU_CS(a_ctx, a_maxThreadsGenerated);
   }
   else
   {
     if(accelStruct == "RTX" || accelStruct == "HW")
       return CreateEyeRayCaster_GPU_RQ(a_ctx, a_maxThreadsGenerated);
     else
-      return CreateEyeRayCaster_GPU_SW(a_ctx, a_maxThreadsGenerated);
+      return CreateEyeRayCaster_GPU_CS(a_ctx, a_maxThreadsGenerated);
   }
 }                                           
 
