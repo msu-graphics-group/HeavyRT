@@ -83,8 +83,21 @@ scene.LoadState(a_path) < 0
     auto proj      = perspectiveMatrix(cam.fov, aspect, cam.nearPlane, cam.farPlane);
     auto worldView = lookAt(float3(cam.pos), float3(cam.lookAt), float3(cam.up));
 
+    float4x4 c2w;
+    if(cam.has_matrix) // matrix is in mitsuba format!
+    {
+      c2w = cam.matrix;
+      c2w.m_col[0] *= -1;
+      c2w.m_col[2] *= -1;
+      c2w = inverse4x4(c2w);
+    } 
+    else
+    {
+      c2w = lookAt(float3(cam.pos), float3(cam.lookAt), float3(cam.up));
+    }
+
     m_projInv      = inverse4x4(proj);
-    m_worldViewInv = inverse4x4(worldView);
+    m_worldViewInv = inverse4x4(c2w);
 
     break; // take first cam
   }

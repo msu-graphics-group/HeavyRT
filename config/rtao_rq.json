@@ -20,7 +20,8 @@
     "-shaderFolderPrefix" : "examples/02_rtao/",
     "-timestamps"   : "0",
     "-suffix" : "_GPU_RQ",
-    "-const_ubo"  : 1
+    "-const_ubo"  : 1,
+    "-persistent" : 0
   },
   "kernels" : {
     "all"        : {"nonConstantData": {"a_outColor" : 1}},

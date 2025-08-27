@@ -5,9 +5,8 @@
 #include <fstream>
 #include <locale>
 #include <codecvt>
-#ifdef __ANDROID__
-#include <android/log.h>
-#include <android/asset_manager.h>
+
+#if defined(__ANDROID__)
 #define LOGE(...) \
   ((void)__android_log_print(ANDROID_LOG_ERROR, "HydraXML", __VA_ARGS__))
 #endif
@@ -34,7 +33,7 @@ namespace hydra_xml
   }
 
 #if defined(__ANDROID__)
-  int HydraScene::LoadState(AAssetManager* mgr, const std::string &path)
+  int HydraScene::LoadState(AAssetManager* mgr, const std::string& path, const std::string& scnDir)
   {
     AAsset* asset = AAssetManager_open(mgr, path.c_str(), AASSET_MODE_STREAMING);
     if (!asset)
@@ -53,7 +52,7 @@ namespace hydra_xml
 
     pugi::xml_document xmlDoc;
 
-    auto loaded = m_xmlDoc.load_buffer(data, asset_size);
+    auto loaded = xmlDoc.load_buffer(data, asset_size);
 
     if(!loaded)
     {
@@ -65,29 +64,36 @@ namespace hydra_xml
 
     auto pos = path.find_last_of(L'/');
     m_libraryRootDir = path.substr(0, pos);
+    if(scnDir != "")
+      m_libraryRootDir = scnDir;
+    
+    pugi::xml_node root = xmlDoc;
+    if(xmlDoc.child(L"root") != nullptr)
+      root = xmlDoc.child(L"root");
+    
+    auto texturesLib  = root.child(L"textures_lib");
+    auto materialsLib = root.child(L"materials_lib");
+    auto geometryLib  = root.child(L"geometry_lib");
+    auto lightsLib    = root.child(L"lights_lib");
 
-    m_texturesLib  = m_xmlDoc.child(L"textures_lib");
-    m_materialsLib = m_xmlDoc.child(L"materials_lib");
-    m_geometryLib  = m_xmlDoc.child(L"geometry_lib");
-    m_lightsLib    = m_xmlDoc.child(L"lights_lib");
+    auto cameraLib    = root.child(L"cam_lib");
+    auto settingsNode = root.child(L"render_lib");
+    auto sceneNode    = root.child(L"scenes");
 
-    m_cameraLib    = m_xmlDoc.child(L"cam_lib");
-    m_settingsNode = m_xmlDoc.child(L"render_lib");
-    m_scenesNode    = m_xmlDoc.child(L"scenes");
-
-    if (m_texturesLib == nullptr || m_materialsLib == nullptr || m_lightsLib == nullptr || m_cameraLib == nullptr || m_geometryLib == nullptr || m_settingsNode == nullptr || m_scenesNode == nullptr)
+    if (texturesLib == nullptr || materialsLib == nullptr || lightsLib == nullptr || cameraLib == nullptr ||
+        geometryLib == nullptr || settingsNode == nullptr || sceneNode == nullptr)
     {
       std::string errMsg = "Loaded state (" +  path + ") doesn't have one of (textures_lib, materials_lib, lights_lib, cam_lib, geometry_lib, render_lib, scenes";
       LogError(errMsg);
       return -1;
     }
 
-    parseInstancedMeshes(m_scenesNode, m_geometryLib);
+    parseInstancedMeshes(sceneNode, geometryLib);
 
     return 0;
   }
 #else
-  int HydraScene::LoadState(const std::string &path)
+  int HydraScene::LoadState(const std::string& path, const std::string& scnDir)
   {
     auto loaded = m_xmlDoc.load_file(path.c_str());
 
@@ -102,17 +108,31 @@ namespace hydra_xml
       return -1;
     }
 
-    auto pos = path.find_last_of(L'/');
+    #ifdef WIN32
+    size_t pos = path.find_last_of("\\");
+    if(pos == std::string::npos)
+      pos = path.find_last_of("/");
+    #else
+    size_t pos = path.find_last_of('/');
+    #endif
+
     m_libraryRootDir = path.substr(0, pos);
+    if(scnDir != "")
+      m_libraryRootDir = scnDir;
 
-    m_texturesLib  = m_xmlDoc.child(L"textures_lib");
-    m_materialsLib = m_xmlDoc.child(L"materials_lib");
-    m_geometryLib  = m_xmlDoc.child(L"geometry_lib");
-    m_lightsLib    = m_xmlDoc.child(L"lights_lib");
+    pugi::xml_node root = m_xmlDoc;
+    if(m_xmlDoc.child(L"root") != nullptr)
+      root = m_xmlDoc.child(L"root");
 
-    m_cameraLib    = m_xmlDoc.child(L"cam_lib");
-    m_settingsNode = m_xmlDoc.child(L"render_lib");
-    m_scenesNode   = m_xmlDoc.child(L"scenes");
+    m_texturesLib  = root.child(L"textures_lib");
+    m_materialsLib = root.child(L"materials_lib");
+    m_geometryLib  = root.child(L"geometry_lib");
+    m_lightsLib    = root.child(L"lights_lib");
+    m_spectraLib   = root.child(L"spectra_lib");
+
+    m_cameraLib    = root.child(L"cam_lib");
+    m_settingsNode = root.child(L"render_lib");
+    m_scenesNode   = root.child(L"scenes");
 
     if (m_texturesLib == nullptr || m_materialsLib == nullptr || m_lightsLib == nullptr || m_cameraLib == nullptr || m_geometryLib == nullptr || m_settingsNode == nullptr || m_scenesNode == nullptr)
     {
@@ -133,7 +153,9 @@ namespace hydra_xml
     for (pugi::xml_node inst = scene.first_child(); inst != nullptr; inst = inst.next_sibling())
     {
       if (std::wstring(inst.name()) == L"instance_light")
-        break;
+        continue;
+
+      m_numInstances += 1;
 
       auto mesh_id = inst.attribute(L"mesh_id").as_string();
       auto matrix = std::wstring(inst.attribute(L"matrix").as_string());
@@ -143,7 +165,15 @@ namespace hydra_xml
       if(meshNode != nullptr)
       {
         auto meshLoc = ws2s(std::wstring(meshNode.attribute(L"loc").as_string()));
-        meshLoc = m_libraryRootDir + "/" + meshLoc;
+        
+        if(meshLoc == std::string("unknown"))
+        {
+          meshLoc = ws2s(std::wstring(meshNode.attribute(L"path").as_string()));
+        }
+        else
+        {
+          meshLoc = m_libraryRootDir + "/" + meshLoc;
+        }
 
 #if not defined(__ANDROID__)
         std::ifstream checkMesh(meshLoc);
@@ -177,7 +207,15 @@ namespace hydra_xml
       }
     }
 
-
+    if(scene.attribute(L"bbox"))
+    {
+      auto bbox_str = scene.attribute(L"bbox").as_string();
+      std::wstringstream inputStream(bbox_str);
+      
+      inputStream >> m_scene_bbox.boxMin.x >> m_scene_bbox.boxMax.x;
+      inputStream >> m_scene_bbox.boxMin.y >> m_scene_bbox.boxMax.y;
+      inputStream >> m_scene_bbox.boxMin.z >> m_scene_bbox.boxMax.z;
+    }
   }
 
   LiteMath::float4x4 float4x4FromString(const std::wstring &matrix_str)
@@ -221,7 +259,85 @@ namespace hydra_xml
     return res;
   }
 
-  LiteMath::float3 readval3f(pugi::xml_node a_node)
+  void readValuesFromStr(const std::wstring &a_str, std::vector<float> &a_vals)
+  {
+    float val = 0.0f;
+    std::wstringstream ss(a_str);
+    while (ss >> val) 
+    {
+      a_vals.push_back(val);
+    }
+  }
+
+  std::vector<float> readNf(const pugi::xml_node &a_node)
+  {
+    std::vector<float> res;
+    const wchar_t* pStr = a_node.text().as_string();
+    if (pStr != nullptr)
+    {
+      std::wstring str{pStr};
+      readValuesFromStr(str, res);
+    }
+    return res;
+  }
+
+  std::vector<float> readNf(const pugi::xml_attribute &a_attr)
+  {
+    std::vector<float> res;
+    const wchar_t* pStr = a_attr.as_string();
+    if (pStr != nullptr)
+    {
+      std::wstring str{pStr};
+      readValuesFromStr(str, res);
+    }
+    return res;
+  }
+
+  std::variant<float, float3, float4> readvalVariant(const pugi::xml_node &a_node)
+  {
+    std::vector<float> values;
+    if(a_node.attribute(L"val") != nullptr)
+      values = hydra_xml::readNf(a_node.attribute(L"val"));
+    else
+      values = hydra_xml::readNf(a_node);
+
+    std::variant<float, float3, float4> res;
+    if(values.size() == 1)
+    {
+      res = values[0];
+    }
+    else if(values.size() == 3)
+    {
+      res = LiteMath::float3 {values[0], values[1], values[2]};
+    }
+    else if(values.size() == 4)
+    {
+      res = LiteMath::float4 {values[0], values[1], values[2], values[3]};
+    }
+    else
+    {
+      std::wstring nodeName = a_node.name();
+      std::cout << "Node " << ws2s(nodeName) << " contains unexpected number of values: " << values.size();
+      return LiteMath::float4 {0.0f};
+    }
+    
+    return res;
+  }
+
+  std::vector<uint32_t> readvalVectorU(const pugi::xml_attribute &a_attr)
+  {
+    std::vector<uint32_t> res;
+
+    std::wstringstream ws(a_attr.as_string());
+    uint32_t val = 0xFFFFFFFF;
+    while (ws >> val) 
+    {
+      res.push_back(val);
+    }
+    return res;
+  }
+
+  LiteMath::float3 readval3f(const pugi::xml_node a_node)
   {
     float3 color;
     if(a_node.attribute(L"val") != nullptr)
@@ -231,13 +347,45 @@ namespace hydra_xml
     return color;
   }
 
-  float readval1f(const pugi::xml_node a_color)
+  float readval1f(const pugi::xml_node a_color, float default_val) 
   {
-    float color = 0.0f;
+    float color = default_val;
+    if(!a_color)
+    {
+      return color;
+    }
     if (a_color.attribute(L"val") != nullptr)
       color = a_color.attribute(L"val").as_float();
     else
       color = a_color.text().as_float();        // deprecated
+    return color;
+  }
+
+  int readval1i(const pugi::xml_node a_color, int default_val)
+  {
+    int color = default_val;
+    if(!a_color)
+    {
+      return color;
+    }
+    if (a_color.attribute(L"val") != nullptr)
+      color = a_color.attribute(L"val").as_int();
+    else
+      color = a_color.text().as_int();          // deprecated
+    return color;
+  }
+
+  unsigned int readval1u(const pugi::xml_node a_color, uint32_t default_val)
+  {
+    unsigned int color = default_val;
+    if(!a_color)
+    {
+      return color;
+    }
+    if (a_color.attribute(L"val") != nullptr)
+      color = a_color.attribute(L"val").as_uint();
+    else
+      color = a_color.text().as_uint();          // deprecated
     return color;
   }
 
@@ -277,162 +425,5 @@ namespace hydra_xml
     return result;
   }
 
-
-  Sampler::AddressMode GetAddrModeFromString(const std::wstring& a_mode)
-  {
-    if(a_mode == L"clamp")
-      return Sampler::AddressMode::CLAMP;
-    else if(a_mode == L"wrap")
-      return Sampler::AddressMode::WRAP;
-    else if(a_mode == L"mirror")
-      return Sampler::AddressMode::MIRROR;
-    else if(a_mode == L"border")
-      return Sampler::AddressMode::BORDER;
-    else if(a_mode == L"mirror_once")
-      return Sampler::AddressMode::MIRROR_ONCE;
-    else
-      return Sampler::AddressMode::WRAP;
-  }
-
-  HydraSampler ReadSamplerFromColorNode(const pugi::xml_node& a_colorNodes)
-  {
-    HydraSampler res;
-    auto texNode = a_colorNodes.child(L"texture");
-    if(texNode == nullptr)
-      return res;
-
-    res.texId = texNode.attribute(L"id").as_uint();
-
-    if(texNode.attribute(L"addressing_mode_u") != nullptr)
-    {
-      std::wstring addModeU = texNode.attribute(L"addressing_mode_u").as_string();
-      res.sampler.addressU  = GetAddrModeFromString(addModeU);
-    }
-
-    if(texNode.attribute(L"addressing_mode_v") != nullptr)
-    {
-      std::wstring addModeV = texNode.attribute(L"addressing_mode_v").as_string();
-      res.sampler.addressV  = GetAddrModeFromString(addModeV);
-    }
-
-    if(texNode.attribute(L"addressing_mode_w") == nullptr)
-      res.sampler.addressW  = res.sampler.addressV;
-    else
-    {
-      std::wstring addModeW = texNode.attribute(L"addressing_mode_w").as_string();
-      res.sampler.addressW  = GetAddrModeFromString(addModeW);
-    }
-
-    res.sampler.filter = Sampler::Filter::LINEAR;
-    if(texNode.attribute(L"filter") != nullptr)
-    {
-      std::wstring filterMode = texNode.attribute(L"filter").as_string();
-      if(filterMode == L"point" || filterMode == L"nearest")
-        res.sampler.filter = Sampler::Filter::NEAREST;
-  //    else if(filterMode == L"cubic" || filterMode == L"bicubic")
-  //      res.sampler.filter = Sampler::Filter::CUBIC;
-    }
-
-    if(texNode.attribute(L"input_gamma") != nullptr)
-      res.inputGamma = texNode.attribute(L"input_gamma").as_float();
-
-    const std::wstring inputAlphaMode = texNode.attribute(L"input_alpha").as_string();
-    if(inputAlphaMode == L"alpha")
-      res.alphaFromRGB = false;
-
-    // read texture matrix
-    //
-    std::wstringstream inputStream(texNode.attribute(L"matrix").as_string()); // in HydraXML we store matrices by rows
-    for(int i=0;i<4;i++)
-      inputStream >> res.row0[i];
-    for(int i=0;i<4;i++)
-      inputStream >> res.row1[i];
-    return res;
-  }
-
-  std::shared_ptr<ICombinedImageSampler> MakeWhiteDummy()
-  {
-    constexpr uint32_t WHITE = 0x00FFFFFF;
-    std::shared_ptr< Image2D<uint32_t> > pTexture1 = std::make_shared< Image2D<uint32_t> >(1, 1, &WHITE);
-    Sampler sampler;
-    sampler.filter   = Sampler::Filter::NEAREST;
-    sampler.addressU = Sampler::AddressMode::CLAMP;
-    sampler.addressV = Sampler::AddressMode::CLAMP;
-    return MakeCombinedTexture2D(pTexture1, sampler);
-  }
-
-  #if defined(__ANDROID__)
-  std::shared_ptr<ICombinedImageSampler> LoadTextureAndMakeCombined(AAssetManager* mgr, const TextureInfo& a_texInfo, const Sampler& a_sampler)
-  {
-    std::shared_ptr<ICombinedImageSampler> pResult = nullptr;
-    int wh[2] = {0,0};
-
-    std::string fileName = ws2s(a_texInfo.path);
-    AAsset* asset = AAssetManager_open(mgr, fileName.c_str(), AASSET_MODE_STREAMING);
-    if(asset == nullptr)
-      return nullptr;
-
-    size_t size = AAsset_getLength(asset);
-    assert(size > 0);
-
-    AAsset_read(asset, wh, sizeof(int)*2);
-
-    if(a_texInfo.bpp == 16)
-    {
-      std::vector<float> data(wh[0]*wh[1]*4);
-      AAsset_read(asset, (char*)data.data(), sizeof(float)*4*data.size());
-      auto pTexture = std::make_shared< Image2D<float4> >(wh[0], wh[1], (const float4*)data.data());
-      pResult = MakeCombinedTexture2D(pTexture, a_sampler);
-    }
-    else
-    {
-      std::vector<uint32_t> data(wh[0]*wh[1]);
-      AAsset_read(asset, (char*)data.data(), sizeof(uint32_t)*data.size());
-      auto pTexture = std::make_shared< Image2D<uint32_t> >(wh[0], wh[1], data.data());
-      pTexture->setSRGB(true);
-      pResult = MakeCombinedTexture2D(pTexture, a_sampler);
-    }
-
-    return pResult;
-  }
-  #else
-  std::shared_ptr<ICombinedImageSampler> LoadTextureAndMakeCombined(const TextureInfo& a_texInfo, const Sampler& a_sampler)
-  {
-    std::shared_ptr<ICombinedImageSampler> pResult = nullptr;
-    int wh[2] = {0,0};
-
-  #ifdef WIN32
-    std::ifstream fin(a_texInfo.path.c_str(), std::ios::binary);
-  #else
-    std::string   fnameA(a_texInfo.path.begin(), a_texInfo.path.end());
-    std::ifstream fin(fnameA.c_str(), std::ios::binary);
-    if(!fin.is_open())
-      std::cout << "[LoadTextureAndMakeCombined]: can't open '" << fnameA << "'" << std::endl;
-  #endif
-
-    fin.read((char*)wh, sizeof(int)*2);
-    if(a_texInfo.bpp == 16)
-    {
-      std::vector<float> data(wh[0]*wh[1]*4);
-      fin.read((char*)data.data(), sizeof(float)*4*data.size());
-      fin.close();
-
-      auto pTexture = std::make_shared< Image2D<float4> >(wh[0], wh[1], (const float4*)data.data());
-      pResult = MakeCombinedTexture2D(pTexture, a_sampler);
-    }
-    else
-    {
-      std::vector<uint32_t> data(wh[0]*wh[1]);
-      fin.read((char*)data.data(), sizeof(uint32_t)*data.size());
-      fin.close();
-
-      auto pTexture = std::make_shared< Image2D<uint32_t> >(wh[0], wh[1], data.data());
-      pTexture->setSRGB(true);
-      pResult = MakeCombinedTexture2D(pTexture, a_sampler);
-    }
-
-    return pResult;
-  }
-  #endif
 }
 
