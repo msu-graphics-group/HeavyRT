@@ -25,7 +25,7 @@ static float2 encode_normal(float3 v)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static inline bool Quadratic(float A, float B, float C, float *t0, float *t1) 
+static inline bool Quadratic2(float A, float B, float C, float *t0, float *t1) 
 {
   float discrim = B * B - 4.0f * A * C;
   if (discrim < 0.f) 
@@ -187,7 +187,7 @@ uint32_t BVH2CommonLoftRT::IntersectAllPrimitivesInLeaf(float4 rayPosAndNear, fl
     const float  B = 2 * (rayDirAndFar.x * o.x + rayDirAndFar.y * o.y + rayDirAndFar.z * o.z);
     const float  C = o.x * o.x + o.y * o.y + o.z * o.z - radius * radius;
     float  t0, t1;
-    if (!Quadratic(A, B, C, &t0, &t1)) 
+    if (!Quadratic2(A, B, C, &t0, &t1)) 
       return 0;
     
     const float tHit = std::min(t0, t1);

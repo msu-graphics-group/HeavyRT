@@ -1,8 +1,11 @@
+#pragma once
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <cassert>
 #include <cfloat>
+#include <string>
 
 #include "HeavyRT.h"
 #include "raytrace_common.h"
