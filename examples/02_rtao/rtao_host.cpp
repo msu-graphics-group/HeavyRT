@@ -131,7 +131,7 @@ scene.LoadState(assetManager, a_path) < 0
 
     if(nodeNameW == L"mesh" && geomTypeW == L"vsgf")
     {
-      std::cout << "[LoadMesh]: mesh = " << meshPath.c_str() << std::endl;
+      //std::cout << "[LoadMesh]: mesh = " << meshPath.c_str() << std::endl;
 
       #if defined(__ANDROID__)
       auto currMesh = cmesh::LoadMeshFromVSGF2(assetManager, meshPath.c_str());

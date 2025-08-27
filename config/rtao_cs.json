@@ -10,7 +10,7 @@
   "additionaIncludes" : ["BVH2CommonLoftRT.h"],
   "options" : {
     "-pattern"    : "rtv",
-    "-megakernel" : "1",
+    "-megakernel" : 1,
     "-shaderCC"   : "slang",
     "-shaderFolderPrefix" : "examples/02_rtao/",
     "-timestamps"   : "0",
