@@ -386,6 +386,132 @@
             ]
         },
 
+        {
+            "name"   : "spaceship(RTAO:CS)",
+            "type"   : "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/render_app",
+            "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/spaceship/statex_00001.xml", "-width", "1024", "-height", "1024",
+                        "-render", "RTAO", "-accel", "BVH2_LOFT", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y02_spaceship_ao_cs.bmp", "-gpu", "1"], 
+            "stopAtEntry": false,
+            "cwd"    : "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+
+        {
+            "name"   : "spaceship(RTAO:RQ)",
+            "type"   : "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/render_app",
+            "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/spaceship/statex_00001.xml", "-width", "1024", "-height", "1024",
+                        "-render", "RTAO", "-accel", "RTX", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y02_spaceship_ao_rq.bmp", "-gpu", "1"], 
+            "stopAtEntry": false,
+            "cwd"    : "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+
+        {
+            "name"   : "staircase(RTAO:CS)",
+            "type"   : "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/render_app",
+            "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/staircase/statex_00001.xml", "-width", "1024", "-height", "1024",
+                        "-render", "RTAO", "-accel", "BVH2_LOFT", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y03_staircase_ao_cs.bmp", "-gpu", "1"], 
+            "stopAtEntry": false,
+            "cwd"    : "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+
+        {
+            "name"   : "staircase(RTAO:RQ)",
+            "type"   : "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/render_app",
+            "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/staircase/statex_00001.xml", "-width", "1024", "-height", "1024",
+                        "-render", "RTAO", "-accel", "RTX", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y03_staircase_ao_rq.bmp", "-gpu", "1"], 
+            "stopAtEntry": false,
+            "cwd"    : "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+
+        {
+            "name"   : "kitchen(RTAO:CS)",
+            "type"   : "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/render_app",
+            "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/kitchen/statex_00001.xml", "-width", "1024", "-height", "1024",
+                        "-render", "RTAO", "-accel", "BVH2_LOFT", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y04_kitchen_ao_cs.bmp", "-gpu", "1"], 
+            "stopAtEntry": false,
+            "cwd"    : "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+
+        {
+            "name"   : "kitchen(RTAO:RQ)",
+            "type"   : "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/render_app",
+            "args"   : ["-scene", "/home/frol/PROG/HydraRepos/HydraScenes/kitchen/statex_00001.xml", "-width", "1024", "-height", "1024",
+                        "-render", "RTAO", "-accel", "RTX", "-build", "cbvh_embree2", "-layout", "DepthFirst", "-out", "y04_kitchen_ao_rq.bmp", "-gpu", "1"], 
+            "stopAtEntry": false,
+            "cwd"    : "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+
 
     ]
 }
