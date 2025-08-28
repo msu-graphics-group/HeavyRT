@@ -73,19 +73,14 @@ void RTAO::CalcAOBlock(uint32_t* a_outColor, uint32_t a_size, uint32_t a_passNum
 
 void RTAO::CalcAO(uint32_t* a_outColor, uint32_t tidX)
 {
-  for (uint pixId = 0; pixId < RTVPersistent_Iters(); pixId++)
-  {
-    RTVPersistent_SetIter(pixId);
-
-    float4 hitPosNorm;
-    float  visibility;
-    kernel_TraceEyeRay2(tidX, &hitPosNorm, &visibility); // ==> (hitPos,hitNorm,visibility)
-    
-    for (uint32_t tidZ = 0; tidZ < (m_aoRaysCount / RTVPersistent_Iters()); tidZ++)
-      kernel_TraceAORay(tidX, tidZ*RTVPersistent_Iters() + tidX % RTVPersistent_Iters(), &hitPosNorm, &visibility); // ==> visibility
-    
-    kernel_AO2Color(tidX, &hitPosNorm, &visibility, a_outColor); // ==> a_outColor
-  }
+  float4 hitPosNorm;
+  float  visibility;
+  kernel_TraceEyeRay2(tidX, &hitPosNorm, &visibility); // ==> (hitPos,hitNorm,visibility)
+  
+  for (uint32_t rayIdZ = 0; rayIdZ < m_aoRaysCount; rayIdZ++)
+    kernel_TraceAORay(tidX, rayIdZ, &hitPosNorm, &visibility); // ==> visibility
+  
+  kernel_AO2Color(tidX, &hitPosNorm, &visibility, a_outColor); // ==> a_outColor
 }
 
 void RTAO::kernel_AO2Color(uint32_t tidX, const float4* positions, const float* visibility, uint32_t* out_color)
@@ -189,7 +184,7 @@ void RTAO::kernel_TraceEyeRay2(uint32_t tidX, float4* positions, float* visibili
   *positions = to_float4(hitPos, as_float(normalCompressed));
 }
 
-void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t tidZ, const float4* positions, float* out_visibility)
+void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t rayIdZ, const float4* positions, float* out_visibility)
 {
   const float4 rayPos1 = *positions;
   if (rayPos1.y>=AO_HIT_BACK) // no hit point of screen
@@ -204,7 +199,7 @@ void RTAO::kernel_TraceAORay(uint32_t tidX, uint32_t tidZ, const float4* positio
   const uint32_t xTiled = x % AO_TILE_SIZE;
   const uint32_t yTiled = y % AO_TILE_SIZE;
 
-  float2 uv      = m_aoRandomsTile[(yTiled * AO_TILE_SIZE + xTiled)*m_aoRaysCount + tidZ];
+  float2 uv      = m_aoRandomsTile[(yTiled * AO_TILE_SIZE + xTiled)*m_aoRaysCount + rayIdZ];
   float3 rayDir2 = MapSampleToCosineDistribution(uv.x, uv.y, normal, normal, 1.0f);
   float3 rayPos2 = OffsRayPos(to_float3(rayPos1), normal, rayDir2);
   
