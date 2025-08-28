@@ -15,7 +15,8 @@
   "additionaIncludes" : ["BVH2CommonLoftRT.h"],
   "options" : {
     "-pattern"    : "rtv",
-    "-megakernel" : 0,
+    "-megakernel" : 1,
+    "-enable_ray_tracing_pipeline": 0,
     "-shaderCC"   : "slang",
     "-shaderFolderPrefix" : "examples/02_rtao/",
     "-timestamps"   : "0",
