@@ -160,3 +160,5 @@ timingsFile2.write("./render_app -scene \"scenes/01_simple_scenes/instanced_obje
 
 timingsFile.close()
 timingsFile2.close()
+
+# 04.02.2026
